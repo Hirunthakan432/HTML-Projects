@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rainbow To-Do List</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #121212, #1e1e1e);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding-top: 50px;
+      transition: background 0.5s, color 0.5s;
+    }
+
+    .container {
+      background-color: rgba(30,30,30,0.9);
+      padding: 30px;
+      border-radius: 15px;
+      width: 360px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+      transition: background 0.5s;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      font-size: 2em;
+      background: linear-gradient(90deg, #ff6b6b, #feca57, #21d4fd, #b721ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: rainbowText 4s linear infinite;
+    }
+
+    @keyframes rainbowText {
+      0%{background-position:0% 50%;}
+      50%{background-position:100% 50%;}
+      100%{background-position:0% 50%;}
+    }
+
+    .new-task {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      margin-right: 10px;
+      background: #2c2c2c;
+      color: #fff;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    input[type="text"]:focus {
+      background: #444;
+      box-shadow: 0 0 10px #ff6b81;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      background: linear-gradient(45deg, #ff6b6b, #feca57);
+      color: #fff;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(255,255,255,0.3);
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 12px 15px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      cursor: pointer;
+      background: linear-gradient(270deg, #ff6b6b, #feca57, #21d4fd, #b721ff, #ff6b6b);
+      background-size: 1000% 1000%;
+      animation: rainbow 5s linear infinite;
+      color: #fff;
+      transform: translateY(0);
+      opacity: 0;
+      animation: fadeIn 0.5s forwards, rainbow 5s linear infinite;
+    }
+
+    li.completed {
+      text-decoration: line-through;
+      opacity: 0.7;
+      animation: none;
+      background: linear-gradient(270deg, #21d4fd, #b721ff);
+    }
+
+    li:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+
+    .delete-btn {
+      background: #ff4757;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .delete-btn:hover {
+      transform: scale(1.1);
+      background: #ff6b81;
+    }
+
+    .toggle-mode {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .toggle-mode button {
+      background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+      color: #fff;
+      font-weight: bold;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(-20px); }
+    }
+
+    @keyframes rainbow {
+      0%{background-position:0% 50%;}
+      50%{background-position:100% 50%;}
+      100%{background-position:0% 50%;}
+    }
+
+    /* Light mode */
+    body.light-mode {
+      background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+      color: #000;
+    }
+
+    body.light-mode .container {
+      background-color: rgba(255,255,255,0.9);
+      color: #000;
+    }
+
+    body.light-mode input[type="text"] {
+      background: #e0e0e0;
+      color: #000;
+    }
+
+    body.light-mode li {
+      color: #000;
+      background: linear-gradient(270deg, #ff9a9e, #fecfef, #a1c4fd, #c2e9fb, #ff9a9e);
+      background-size: 1000% 1000%;
+      animation: fadeIn 0.5s forwards, rainbow 5s linear infinite;
+    }
+
+    body.light-mode li.completed {
+      background: linear-gradient(270deg, #a1c4fd, #c2e9fb);
+      animation: none;
+      opacity: 0.7;
+    }
+
+    body.light-mode button {
+      background: linear-gradient(45deg, #ff6b6b, #feca57);
+      color: #000;
+    }
+
+    body.light-mode .delete-btn {
+      background: #ff6b6b;
+    }
+
+    body.light-mode .delete-btn:hover {
+      background: #ff4757;
+    }
+
+    body.light-mode .toggle-mode button {
+      background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+      color: #000;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Rainbow To-Do List - Made by Hirunthakan</h1>
+    <div class="new-task">
+      <input type="text" id="task-input" placeholder="Add a new task...">
+      <button id="add-btn">Add</button>
+    </div>
+    <ul id="task-list"></ul>
+    <div class="toggle-mode">
+      <button id="mode-toggle">Toggle Dark/Light Mode</button>
+    </div>
+  </div>
+
+  <script>
+    const taskInput = document.getElementById('task-input');
+    const addBtn = document.getElementById('add-btn');
+    const taskList = document.getElementById('task-list');
+    const modeToggle = document.getElementById('mode-toggle');
+
+    // Load tasks from localStorage
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      tasks.forEach((task, index) => {
+        const li = document.createElement('li');
+        li.textContent = task.text;
+        if(task.completed) li.classList.add('completed');
+
+        // Complete task
+        li.addEventListener('click', () => {
+          tasks[index].completed = !tasks[index].completed;
+          saveTasks();
+          renderTasks();
+        });
+
+        // Delete button
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'Delete';
+        delBtn.className = 'delete-btn';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          tasks.splice(index, 1);
+          saveTasks();
+          renderTasks();
+        });
+
+        li.appendChild(delBtn);
+        taskList.appendChild(li);
+      });
+    }
+
+    // Add task
+    addBtn.addEventListener('click', () => {
+      const text = taskInput.value.trim();
+      if(text !== '') {
+        tasks.push({ text, completed: false });
+        saveTasks();
+        renderTasks();
+        taskInput.value = '';
+      }
+    });
+
+    // Enter key
+    taskInput.addEventListener('keypress', (e) => {
+      if(e.key === 'Enter') addBtn.click();
+    });
+
+    // Dark/Light mode toggle
+    modeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('light-mode');
+      localStorage.setItem('darkMode', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+    });
+
+    // Load dark mode preference
+    if(localStorage.getItem('darkMode') === 'light') {
+      document.body.classList.add('light-mode');
+    }
+
+    renderTasks();
+  </script>
+</body>
+</html>
