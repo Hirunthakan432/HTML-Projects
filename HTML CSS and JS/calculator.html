@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flexible Scientific Calculator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap');
+
+body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4, #a18cd1, #fbc2eb);
+    background-size: 400% 400%;
+    font-family: 'Roboto Mono', monospace;
+    animation: gradientBG 15s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
+
+.calculator {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 25px;
+    padding: 20px;
+    width: 350px;
+    max-width: 95%;
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+}
+
+.display {
+    width: 100%;
+    min-height: 70px;
+    max-height: 120px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    text-align: right;
+    font-size: 2rem;
+    padding: 10px;
+    color: #fff;
+    margin-bottom: 15px;
+    box-shadow: inset 0 4px 10px rgba(0,0,0,0.2);
+    overflow-wrap: break-word;
+    overflow-y: auto;
+    word-break: break-all;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-gap: 10px;
+}
+
+button {
+    padding: 18px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #fff;
+    background: linear-gradient(45deg, #ff512f, #dd2476);
+    transition: transform 0.2s, background 0.3s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+button:hover {
+    transform: translateY(-5px) scale(1.05);
+    background: linear-gradient(45deg, #24c6dc, #514a9d);
+}
+
+.operator { background: linear-gradient(45deg, #f7971e, #ffd200); }
+.operator:hover { background: linear-gradient(45deg, #f953c6, #b91d73); }
+
+.scientific { background: linear-gradient(45deg, #1c92d2, #f2fcfe); color: #000; }
+.scientific:hover { background: linear-gradient(45deg, #fc4a1a, #f7b733); color: #fff; }
+
+@media (max-width: 400px) {
+    .calculator { width: 95%; padding: 15px; }
+    button { padding: 15px; font-size: 0.9rem; }
+    .display { min-height: 50px; font-size: 1.6rem; max-height: 100px; }
+}
+</style>
+</head>
+<body>
+<div class="calculator">
+    <div class="display" id="display">0</div>
+    <div class="buttons">
+        <button class="scientific" onclick="memoryClear()">MC</button>
+        <button class="scientific" onclick="memoryRecall()">MR</button>
+        <button class="scientific" onclick="memoryAdd()">M+</button>
+        <button class="scientific" onclick="memorySubtract()">M-</button>
+        <button class="operator" onclick="clearDisplay()">C</button>
+
+        <button class="scientific" onclick="appendOperator('(')">(</button>
+        <button class="scientific" onclick="appendOperator(')')">)</button>
+        <button class="scientific" onclick="appendFunction('pi')">π</button>
+        <button class="scientific" onclick="appendFunction('e')">e</button>
+        <button class="operator" onclick="backspace()">⌫</button>
+
+        <button onclick="appendNumber('7')">7</button>
+        <button onclick="appendNumber('8')">8</button>
+        <button onclick="appendNumber('9')">9</button>
+        <button class="operator" onclick="appendOperator('/')">÷</button>
+        <button class="scientific" onclick="appendFunction('sqrt')">√</button>
+
+        <button onclick="appendNumber('4')">4</button>
+        <button onclick="appendNumber('5')">5</button>
+        <button onclick="appendNumber('6')">6</button>
+        <button class="operator" onclick="appendOperator('*')">×</button>
+        <button class="scientific" onclick="appendFunction('^')">xʸ</button>
+
+        <button onclick="appendNumber('1')">1</button>
+        <button onclick="appendNumber('2')">2</button>
+        <button onclick="appendNumber('3')">3</button>
+        <button class="operator" onclick="appendOperator('-')">-</button>
+        <button class="scientific" onclick="appendFunction('!')">n!</button>
+
+        <button onclick="appendNumber('0')">0</button>
+        <button onclick="appendNumber('.')">.</button>
+        <button class="operator" onclick="calculate()">=</button>
+        <button class="operator" onclick="appendOperator('+')">+</button>
+        <button class="scientific" onclick="appendFunction('abs')">abs</button>
+
+        <button class="scientific" onclick="appendFunction('sin')">sin</button>
+        <button class="scientific" onclick="appendFunction('cos')">cos</button>
+        <button class="scientific" onclick="appendFunction('tan')">tan</button>
+        <button class="scientific" onclick="appendFunction('log')">log</button>
+        <button class="scientific" onclick="appendFunction('ln')">ln</button>
+        <button class="scientific" onclick="appendFunction('exp')">exp</button>
+    </div>
+</div>
+
+<script>
+let display = document.getElementById('display');
+let currentInput = '';
+let memory = 0;
+
+function appendNumber(num) { currentInput += num; updateDisplay(); }
+function appendOperator(op) { currentInput += op; updateDisplay(); }
+function appendFunction(func) {
+    if(func === 'pi') currentInput += Math.PI.toFixed(8);
+    else if(func === 'e') currentInput += Math.E.toFixed(8);
+    else if(func === '!') currentInput += '!';
+    else currentInput += func + '(';
+    updateDisplay();
+}
+function clearDisplay() { currentInput = ''; updateDisplay(); }
+function backspace() { currentInput = currentInput.slice(0, -1); updateDisplay(); }
+function updateDisplay() { display.textContent = currentInput || '0'; }
+
+// Memory
+function memoryClear() { memory = 0; }
+function memoryRecall() { currentInput += memory; updateDisplay(); }
+function memoryAdd() { memory += parseFloat(evalExpression(currentInput)); }
+function memorySubtract() { memory -= parseFloat(evalExpression(currentInput)); }
+
+function factorial(n) {
+    if(n < 0) return NaN;
+    if(n === 0 || n === 1) return 1;
+    let res = 1; for(let i=2;i<=n;i++) res*=i; return res;
+}
+
+function evalExpression(expr) {
+    try {
+        expr = expr
+            .replace(/÷/g, '/')
+            .replace(/×/g, '*')
+            .replace(/\^/g, '**')
+            .replace(/sqrt\(/g, 'Math.sqrt(')
+            .replace(/sin\(/g, 'Math.sin(')
+            .replace(/cos\(/g, 'Math.cos(')
+            .replace(/tan\(/g, 'Math.tan(')
+            .replace(/log\(/g, 'Math.log10(')
+            .replace(/ln\(/g, 'Math.log(')
+            .replace(/abs\(/g, 'Math.abs(')
+            .replace(/exp\(/g, 'Math.exp(');
+
+        if(expr.includes('!')) expr = expr.replace(/(\d+)!/g, (_, n)=>factorial(parseInt(n)));
+
+        return eval(expr);
+    } catch { return 'Error'; }
+}
+
+function calculate() { currentInput = evalExpression(currentInput).toString(); updateDisplay(); }
+</script>
+</body>
+</html>
