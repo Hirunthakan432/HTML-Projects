@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electromagnetic waves · interactive visualization</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        body {
+            background: linear-gradient(145deg, #f5f7fc 0%, #e8ecf5 100%);
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 2.5rem;
+            padding: 2rem 2rem 2.5rem 2rem;
+            box-shadow: 0 25px 45px -10px rgba(0,20,50,0.3),
+                        inset 0 1px 2px rgba(255,255,255,0.7);
+            border: 1px solid rgba(255,255,255,0.5);
+            max-width: 1100px;
+            width: fit-content;
+            margin: 2rem;
+        }
+        h1 {
+            margin: 0 0 0.4rem 0;
+            font-weight: 500;
+            font-size: 2rem;
+            letter-spacing: -0.5px;
+            color: #0b1f3b;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+        h1 span {
+            background: #1b3b5c;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: 400;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            letter-spacing: 0.3px;
+            opacity: 0.9;
+        }
+        .sub {
+            color: #2c3f5f;
+            margin-top: 0;
+            margin-bottom: 1.8rem;
+            font-weight: 400;
+            font-size: 1rem;
+            border-left: 3px solid #4a80c0;
+            padding-left: 1rem;
+        }
+        .canvas-container {
+            background-color: #0c1421;
+            border-radius: 28px;
+            padding: 10px;
+            box-shadow: inset 0 -3px 8px rgba(0,0,0,0.5), 0 12px 25px rgba(0,0,0,0.3);
+            border: 1px solid #a0b9da;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 20px;
+            background: #0b111e;
+            cursor: default;
+            margin: 0 auto;
+        }
+        .control-panel {
+            margin-top: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem 3rem;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        .slider-group {
+            min-width: 180px;
+            flex: 1 1 200px;
+        }
+        .slider-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            color: #1d344d;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+        }
+        .slider-group label i {
+            font-style: normal;
+            color: #2f5a9c;
+            font-size: 1.2rem;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 7px;
+            background: linear-gradient(90deg, #3865a0, #94b5e6);
+            border-radius: 20px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px #00000040, 0 0 0 2px #1d4670;
+            cursor: grab;
+            transition: 0.08s;
+            border: 2px solid #d7e5ff;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { background: #ecf3ff; transform: scale(1.15); }
+        .value-badge {
+            display: inline-block;
+            background: #1b2d47;
+            color: white;
+            border-radius: 30px;
+            padding: 0.2rem 1rem;
+            margin-left: 0.7rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        .legend {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+            color: #1e334f;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.4);
+            padding: 0.3rem 1.2rem;
+            border-radius: 40px;
+            backdrop-filter: blur(2px);
+        }
+        .legend-color {
+            width: 22px;
+            height: 22px;
+            border-radius: 8px;
+            background: #ff4d6d;
+            box-shadow: 0 2px 6px #ff4d6da0;
+        }
+        .legend-color.mag {
+            background: #6ec1ff;
+            box-shadow: 0 2px 6px #3f9effb0;
+        }
+        .legend-color.dir {
+            background: #f4d03f;
+            box-shadow: 0 2px 6px #f5c542;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.85rem;
+            color: #4b6085;
+        }
+        button {
+            background: none;
+            border: none;
+            color: #2a4a77;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: underline dotted;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>
+        ⚡ Electromagnetic wave simulator • Developed by Hirunthakan
+        <span>E & B fields</span>
+    </h1>
+    <div class="sub">✧ adjust wavelength, amplitude & speed — waves travel in real time ✧</div>
+
+    <!-- canvas area -->
+    <div class="canvas-container">
+        <canvas id="emCanvas" width="950" height="450"></canvas>
+    </div>
+
+    <!-- control sliders -->
+    <div class="control-panel">
+        <div class="slider-group">
+            <label><i>⏆</i> Wavelength <span class="value-badge" id="lambdaValue">4.0</span></label>
+            <input type="range" id="lambdaSlider" min="1.6" max="9.0" value="4.0" step="0.05">
+        </div>
+        <div class="slider-group">
+            <label><i>⬆</i> E amplitude <span class="value-badge" id="ampEValue">1.2</span></label>
+            <input type="range" id="ampESlider" min="0.3" max="2.2" value="1.2" step="0.05">
+        </div>
+        <div class="slider-group">
+            <label><i>⏵</i> Speed factor <span class="value-badge" id="speedValue">1.0</span></label>
+            <input type="range" id="speedSlider" min="0.0" max="2.2" value="1.0" step="0.05">
+        </div>
+    </div>
+
+    <!-- legend & small reset -->
+    <div class="legend">
+        <div class="legend-item"><span class="legend-color"></span> Electric field (E) — red</div>
+        <div class="legend-item"><span class="legend-color mag"></span> Magnetic field (B) — blue</div>
+        <div class="legend-item"><span class="legend-color dir"></span> propagation direction ➔</div>
+        <div class="legend-item"><button id="resetBtn" title="Restore default parameters">⟲ reset defaults</button></div>
+    </div>
+    <footer>✧ electromagnetic wave · transverse, in-phase · E ⟂ B ⟶ k ✧</footer>
+</div>
+
+<script>
+    (function() {
+        // --- canvas setup ---
+        const canvas = document.getElementById('emCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // --- wave parameters (with defaults) ---
+        let params = {
+            lambda: 4.0,        // wavelength (in arbitrary units, mapped to drawing)
+            ampE: 1.2,           // electric field amplitude (affects height)
+            speed: 1.0,          // speed multiplier
+        };
+
+        // phase offset that increases with time (time * speed factor * baseSpeed)
+        let phase = 0;
+        const baseSpeed = 0.022;   // base radians per frame ( ~ speed=1 gives nice motion)
+
+        // UI elements
+        const lambdaSlider = document.getElementById('lambdaSlider');
+        const ampESlider = document.getElementById('ampESlider');
+        const speedSlider = document.getElementById('speedSlider');
+        const lambdaSpan = document.getElementById('lambdaValue');
+        const ampESpan = document.getElementById('ampEValue');
+        const speedSpan = document.getElementById('speedValue');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // update displayed values & reflect sliders
+        function updateLabels() {
+            lambdaSpan.textContent = params.lambda.toFixed(2);
+            ampESpan.textContent = params.ampE.toFixed(2);
+            speedSpan.textContent = params.speed.toFixed(2);
+        }
+
+        // synchronize sliders from params object
+        function syncSliders() {
+            lambdaSlider.value = params.lambda;
+            ampESlider.value = params.ampE;
+            speedSlider.value = params.speed;
+            updateLabels();
+        }
+
+        // event listeners for sliders
+        lambdaSlider.addEventListener('input', (e) => {
+            params.lambda = parseFloat(e.target.value);
+            updateLabels();
+        });
+        ampESlider.addEventListener('input', (e) => {
+            params.ampE = parseFloat(e.target.value);
+            updateLabels();
+        });
+        speedSlider.addEventListener('input', (e) => {
+            params.speed = parseFloat(e.target.value);
+            updateLabels();
+        });
+
+        // reset to default
+        resetBtn.addEventListener('click', () => {
+            params.lambda = 4.0;
+            params.ampE = 1.2;
+            params.speed = 1.0;
+            syncSliders();
+            // optional: reset phase to 0 for consistency? but keep continuity
+            // phase = 0;   // decide not – let it flow, but you can uncomment if you like
+        });
+
+        // initial sync
+        syncSliders();
+
+        // ----- helper to map x coordinate (0..width) to "xprime" in radians -----
+        function xToRadians(x) {
+            // we want approx 3 full oscillations across canvas width for lambda = 4
+            // scale: wave number k = 2pi / lambda  (lambda in arbitrary units)
+            // but we map such that canvas [0, width] corresponds to x in [0, 12] roughly (makes lambda=4 => 3 cycles)
+            const scale = 12.0 / width;   // maps pixel to "abstract length": width -> 12 units
+            const xAbs = x * scale;        // abstract position (0 to 12)
+            const k = (2 * Math.PI) / params.lambda;
+            return xAbs * k;   // radians = k * x_abstract
+        }
+
+        // ----- draw function (called each animation frame) -----
+        function drawWave() {
+            // update phase based on speed (time progresses)
+            phase += baseSpeed * params.speed;
+
+            // clear canvas with deep navy background
+            ctx.clearRect(0, 0, width, height);
+            
+            // draw faint grid / guides
+            ctx.save();
+            ctx.strokeStyle = "#2a3f60";
+            ctx.lineWidth = 0.6;
+            ctx.setLineDash([5, 6]);
+            // horizontal center line (zero line)
+            ctx.beginPath();
+            ctx.moveTo(0, height/2);
+            ctx.lineTo(width, height/2);
+            ctx.strokeStyle = "#3f557a";
+            ctx.stroke();
+
+            // vertical tick marks every ~50px (direction reminder)
+            ctx.setLineDash([2, 4]);
+            ctx.strokeStyle = "#3c5d8c";
+            for (let x = 40; x < width; x += 70) {
+                ctx.beginPath();
+                ctx.moveTo(x, height/2 - 12);
+                ctx.lineTo(x, height/2 + 12);
+                ctx.strokeStyle = "#5777aa";
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+            
+            // draw small arrow for propagation direction (bottom right)
+            ctx.font = "16px 'Segoe UI', system-ui, sans-serif";
+            ctx.fillStyle = "#f4d03f";
+            ctx.fillText("☛  propagation  →", width-200, height-25);
+            
+            // ---- Electric field (E) in red, thicker ----
+            ctx.beginPath();
+            ctx.lineWidth = 3.2;
+            ctx.strokeStyle = "#ff4d6d";
+            ctx.shadowColor = '#ff9aab';
+            ctx.shadowBlur = 12;
+            
+            let firstPoint = true;
+            // sample points densely for smooth curves (every 3px)
+            for (let x = 0; x <= width; x += 3) {
+                const rad = xToRadians(x);
+                // E field: E_y = ampE * sin(rad - phase)   (negative phase moves wave right)
+                const valE = params.ampE * Math.sin(rad - phase);
+                // map to canvas Y (0 = top, height = bottom). center is height/2, upward positive
+                const yPos = height/2 - valE * 65;   // scale factor 65 for visible amplitude
+                
+                if (firstPoint) {
+                    ctx.moveTo(x, yPos);
+                    firstPoint = false;
+                } else {
+                    ctx.lineTo(x, yPos);
+                }
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // ---- Magnetic field (B) in bright blue, semi-transparent fill below for style ----
+            ctx.beginPath();
+            ctx.lineWidth = 3.0;
+            ctx.strokeStyle = "#6ec1ff";
+            ctx.shadowColor = '#3ca0ff';
+            ctx.shadowBlur = 14;
+            
+            firstPoint = true;
+            for (let x = 0; x <= width; x += 3) {
+                const rad = xToRadians(x);
+                // B field in phase (same sin), amplitude scaled for visibility (proportional to E, but can be different)
+                // we keep same amplitude to show in-phase relationship, but a bit smaller to avoid overlapping clutter
+                const valB = params.ampE * 0.9 * Math.sin(rad - phase);   // slightly less to differentiate
+                const yPos = height/2 - valB * 65;
+                
+                if (firstPoint) {
+                    ctx.moveTo(x, yPos);
+                    firstPoint = false;
+                } else {
+                    ctx.lineTo(x, yPos);
+                }
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // additional subtle "field lines" or direction indicators
+            // draw little arrows on electric field peaks (just for style)
+            ctx.fillStyle = "#ffb0c0";
+            for (let x = 30; x < width-20; x += 47) {
+                const rad = xToRadians(x);
+                const valE = params.ampE * Math.sin(rad - phase);
+                if (Math.abs(valE) > 0.3) { // only when significant
+                    const yPos = height/2 - valE * 65;
+                    ctx.beginPath();
+                    ctx.moveTo(x-8, yPos-6);
+                    ctx.lineTo(x, yPos-12);
+                    ctx.lineTo(x+8, yPos-6);
+                    ctx.fillStyle = "#ff9eb0";
+                    ctx.fill();
+                }
+            }
+
+            // small arrowheads for magnetic field
+            ctx.fillStyle = "#9acdff";
+            for (let x = 50; x < width-20; x += 57) {
+                const rad = xToRadians(x);
+                const valB = params.ampE * 0.9 * Math.sin(rad - phase);
+                if (Math.abs(valB) > 0.25) {
+                    const yPos = height/2 - valB * 65;
+                    ctx.beginPath();
+                    ctx.moveTo(x-7, yPos+7);
+                    ctx.lineTo(x, yPos+14);
+                    ctx.lineTo(x+7, yPos+7);
+                    ctx.fillStyle = "#b2dcff";
+                    ctx.fill();
+                }
+            }
+
+            // ---- draw small dots at sample positions to emphasize E and B are colocated ----
+            ctx.shadowBlur = 0;
+            for (let x = 10; x < width; x += 28) {
+                const rad = xToRadians(x);
+                const valE = params.ampE * Math.sin(rad - phase);
+                const valB = params.ampE * 0.9 * Math.sin(rad - phase);
+                const yPosE = height/2 - valE * 65;
+                const yPosB = height/2 - valB * 65;
+                
+                ctx.beginPath();
+                ctx.arc(x, yPosE, 3.5, 0, 2*Math.PI);
+                ctx.fillStyle = "#ff4d6d";
+                ctx.shadowColor = '#ff99aa';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(x+5, yPosB-4, 3.0, 0, 2*Math.PI); // offset a bit to avoid overlapping
+                ctx.fillStyle = "#3fa0ff";
+                ctx.shadowColor = '#7fc4ff';
+                ctx.shadowBlur = 10;
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+            
+            // small label for axes: "E" and "B"
+            ctx.font = "bold 14px 'Segoe UI'";
+            ctx.fillStyle = "#ffadb8";
+            ctx.fillText("E", 25, height/2 - 80);
+            ctx.fillStyle = "#96ccff";
+            ctx.fillText("B", 55, height/2 + 45);
+            
+            ctx.restore();
+
+            requestAnimationFrame(drawWave);
+        }
+
+        // start animation
+        drawWave();
+
+        // optional: handle window resize if needed, but canvas fixed size works
+        // ensure that canvas stays sharp
+    })();
+</script>
+</body>
+</html>
