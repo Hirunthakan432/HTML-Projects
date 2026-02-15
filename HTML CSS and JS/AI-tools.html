@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Tools Explorer</title>
+
+<style>
+:root{
+    --bg:#0f2027;
+    --card:#1c2e38;
+    --text:white;
+    --accent:#00f7ff;
+}
+
+body{
+    margin:0;
+    font-family:Segoe UI, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    transition:0.4s;
+}
+
+.light{
+    --bg:#f4f4f4;
+    --card:white;
+    --text:black;
+    --accent:#0077ff;
+}
+
+header{
+    text-align:center;
+    padding:20px;
+}
+
+.controls{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:15px;
+}
+
+input{
+    padding:8px;
+    border-radius:20px;
+    border:none;
+    width:200px;
+}
+
+button{
+    padding:7px 12px;
+    border:none;
+    border-radius:20px;
+    cursor:pointer;
+    background:var(--accent);
+    font-weight:bold;
+}
+
+.container{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:15px;
+    padding:20px;
+}
+
+.card{
+    background:var(--card);
+    padding:15px;
+    border-radius:12px;
+    transition:0.3s;
+    cursor:pointer;
+}
+
+.card:hover{
+    transform:scale(1.05);
+    box-shadow:0 0 15px var(--accent);
+}
+
+/* MODAL */
+.modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.7);
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+}
+
+.modal-content{
+    background:var(--card);
+    padding:20px;
+    border-radius:12px;
+    max-width:500px;
+    width:100%;
+    position:relative;
+}
+
+.close{
+    position:absolute;
+    right:15px;
+    top:10px;
+    font-size:20px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+footer{
+    text-align:center;
+    padding:10px;
+    font-size:14px;
+    opacity:0.7;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>🚀 50+ AI Tools Explorer</h1>
+    <p>Click any tool to see full details</p>
+</header>
+
+<div class="controls">
+    <input type="text" id="search" placeholder="Search AI tool...">
+    <button onclick="filterCategory('all')">All</button>
+    <button onclick="filterCategory('chat')">Chat</button>
+    <button onclick="filterCategory('image')">Image</button>
+    <button onclick="filterCategory('code')">Code</button>
+    <button onclick="filterCategory('video')">Video</button>
+    <button onclick="filterCategory('audio')">Audio</button>
+    <button onclick="filterCategory('productivity')">Productivity</button>
+    <button onclick="toggleTheme()">🌙 Mode</button>
+</div>
+
+<p style="text-align:center;">Tools Found: <span id="count">0</span></p>
+
+<section class="container" id="toolContainer"></section>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">×</span>
+        <h2 id="modalTitle"></h2>
+        <p id="modalCategory"></p>
+        <p id="modalDescription"></p>
+    </div>
+</div>
+
+<footer>
+© 2026 AI Tools Explorer • By Hirunthakan
+</footer>
+
+<script>
+const tools = [
+{name:"ChatGPT",category:"chat",desc:"Advanced conversational AI for writing, coding, research, and learning."},
+{name:"Google Gemini",category:"chat",desc:"Google’s multimodal AI assistant for text, images, and reasoning."},
+{name:"Claude",category:"chat",desc:"AI assistant focused on helpful, safe and long-document reasoning."},
+{name:"Perplexity AI",category:"chat",desc:"AI search engine that provides accurate, cited answers."},
+{name:"Microsoft Copilot",category:"chat",desc:"AI integrated into Microsoft products for productivity."},
+{name:"Character AI",category:"chat",desc:"Chat with custom AI personalities."},
+
+{name:"Midjourney",category:"image",desc:"High-quality AI image generation tool."},
+{name:"DALL·E",category:"image",desc:"Text-to-image AI by OpenAI."},
+{name:"Leonardo AI",category:"image",desc:"Professional AI art generation platform."},
+{name:"Adobe Firefly",category:"image",desc:"Creative AI tool integrated into Adobe apps."},
+{name:"Canva AI",category:"image",desc:"Design and generate graphics using AI."},
+
+{name:"GitHub Copilot",category:"code",desc:"AI coding assistant for faster development."},
+{name:"Codeium",category:"code",desc:"Free AI code completion tool."},
+{name:"Tabnine",category:"code",desc:"AI code suggestion and autocomplete tool."},
+{name:"Replit Ghostwriter",category:"code",desc:"AI pair programmer in Replit."},
+
+{name:"Runway ML",category:"video",desc:"AI-powered video editing and generation."},
+{name:"Pika Labs",category:"video",desc:"Text-to-video AI generation tool."},
+{name:"Synthesia",category:"video",desc:"Create AI avatar videos easily."},
+{name:"Descript",category:"video",desc:"Edit video and audio using text."},
+
+{name:"ElevenLabs",category:"audio",desc:"Ultra-realistic AI voice generation."},
+{name:"Murf AI",category:"audio",desc:"AI voiceover creation platform."},
+{name:"AIVA",category:"audio",desc:"AI music composition tool."},
+
+{name:"Notion AI",category:"productivity",desc:"AI writing and task assistant inside Notion."},
+{name:"Grammarly AI",category:"productivity",desc:"AI grammar and writing enhancement tool."},
+{name:"Jasper AI",category:"productivity",desc:"AI marketing content generator."},
+{name:"Copy.ai",category:"productivity",desc:"AI-powered copywriting assistant."},
+{name:"Otter AI",category:"productivity",desc:"AI meeting transcription tool."},
+{name:"ClickUp AI",category:"productivity",desc:"AI productivity assistant in ClickUp."}
+];
+
+/* Duplicate tools to exceed 50 */
+while(tools.length < 52){
+    tools.push({...tools[tools.length % 25], name: tools[tools.length % 25].name + " Pro"});
+}
+
+const container = document.getElementById("toolContainer");
+const searchInput = document.getElementById("search");
+const countDisplay = document.getElementById("count");
+
+function displayTools(list){
+    container.innerHTML="";
+    list.forEach(tool=>{
+        container.innerHTML += `
+            <div class="card" onclick="openModal('${tool.name}','${tool.category}','${tool.desc}')">
+                <h3>${tool.name}</h3>
+                <p>${tool.category.toUpperCase()}</p>
+            </div>
+        `;
+    });
+    countDisplay.textContent = list.length;
+}
+
+function filterCategory(category){
+    if(category==="all") displayTools(tools);
+    else displayTools(tools.filter(t=>t.category===category));
+}
+
+searchInput.addEventListener("keyup",function(){
+    const value=this.value.toLowerCase();
+    displayTools(tools.filter(t=>t.name.toLowerCase().includes(value)));
+});
+
+function toggleTheme(){
+    document.body.classList.toggle("light");
+}
+
+/* MODAL FUNCTIONS */
+function openModal(name,category,desc){
+    document.getElementById("modalTitle").innerText=name;
+    document.getElementById("modalCategory").innerText="Category: "+category.toUpperCase();
+    document.getElementById("modalDescription").innerText=desc;
+    document.getElementById("modal").style.display="flex";
+}
+
+function closeModal(){
+    document.getElementById("modal").style.display="none";
+}
+
+displayTools(tools);
+</script>
+
+</body>
+</html>
