@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loading Animations Playground</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    /* Keyframes */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.3); opacity: 0.5; } }
+    @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-24px); } }
+    @keyframes wave { 0%, 40%, 100% { transform: scaleY(0.4); } 20% { transform: scaleY(1); } }
+    @keyframes orbit { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes morph { 0%, 100% { border-radius: 50%; transform: rotate(0deg); } 25% { border-radius: 20%; transform: rotate(90deg); } 50% { border-radius: 50%; transform: rotate(180deg); } 75% { border-radius: 20%; transform: rotate(270deg); } }
+    @keyframes ripple { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: scale(2); opacity: 0; } }
+    @keyframes flip { 0% { transform: perspective(120px) rotateX(0deg) rotateY(0deg); } 50% { transform: perspective(120px) rotateX(-180deg) rotateY(0deg); } 100% { transform: perspective(120px) rotateX(-180deg) rotateY(-180deg); } }
+    @keyframes typing { 0%, 60%, 100% { opacity: 0.3; transform: scale(0.8); } 30% { opacity: 1; transform: scale(1); } }
+    @keyframes progress { 0% { width: 0%; } 50% { width: 100%; } 100% { width: 0%; } }
+    @keyframes swing { 0%, 100% { transform: rotate(-30deg); } 50% { transform: rotate(30deg); } }
+    @keyframes dna { 0%, 100% { transform: translateY(-12px); } 50% { transform: translateY(12px); } }
+    @keyframes spiral { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(0.7); } 100% { transform: rotate(360deg) scale(1); } }
+    @keyframes grid-pulse { 0%, 100% { transform: scale(0.8); opacity: 0.4; } 50% { transform: scale(1); opacity: 1; } }
+    @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.3; } 50% { opacity: 1; } 100% { transform: scale(1.2); opacity: 0; } }
+    @keyframes circle-rotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes bars-fade { 0%, 100% { opacity: 0.3; transform: scaleY(0.6); } 50% { opacity: 1; transform: scaleY(1); } }
+    @keyframes hourglass { 0% { transform: scaleY(1) rotateZ(0deg); } 50% { transform: scaleY(0.7) rotateZ(180deg); } 100% { transform: scaleY(1) rotateZ(360deg); } }
+    @keyframes climb { 0%, 100% { transform: translateY(0); opacity: 0.3; } 50% { transform: translateY(-20px); opacity: 1; } }
+    @keyframes square-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes bounce-dots { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+    @keyframes expand { 0%, 100% { transform: scale(0); opacity: 1; } 50% { opacity: 0.5; } 100% { transform: scale(1); opacity: 0; } }
+    @keyframes twist { 0% { transform: rotate(0deg); border-radius: 50%; } 50% { border-radius: 20%; } 100% { transform: rotate(360deg); border-radius: 50%; } }
+    @keyframes favorite-pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
+    @keyframes copy-feedback { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+    /* Loader Styles */
+    .loader-spinner { width: 48px; height: 48px; border: 4px solid currentColor; border-bottom-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+    .loader-pulse { display: flex; gap: 8px; }
+    .loader-pulse span { width: 16px; height: 16px; background: currentColor; border-radius: 50%; animation: pulse 1.2s ease-in-out infinite; }
+    .loader-pulse span:nth-child(2) { animation-delay: 0.2s; }
+    .loader-pulse span:nth-child(3) { animation-delay: 0.4s; }
+    .loader-bounce { display: flex; gap: 6px; }
+    .loader-bounce span { width: 14px; height: 14px; background: currentColor; border-radius: 50%; animation: bounce 1.4s ease-in-out infinite; }
+    .loader-bounce span:nth-child(2) { animation-delay: 0.16s; }
+    .loader-bounce span:nth-child(3) { animation-delay: 0.32s; }
+    .loader-wave { display: flex; gap: 4px; align-items: center; height: 48px; }
+    .loader-wave span { width: 6px; height: 100%; background: currentColor; border-radius: 3px; animation: wave 1.2s ease-in-out infinite; }
+    .loader-wave span:nth-child(2) { animation-delay: 0.1s; }
+    .loader-wave span:nth-child(3) { animation-delay: 0.2s; }
+    .loader-wave span:nth-child(4) { animation-delay: 0.3s; }
+    .loader-wave span:nth-child(5) { animation-delay: 0.4s; }
+    .loader-orbit { width: 48px; height: 48px; position: relative; animation: orbit 1.5s linear infinite; }
+    .loader-orbit span { position: absolute; width: 12px; height: 12px; background: currentColor; border-radius: 50%; }
+    .loader-orbit span:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
+    .loader-orbit span:nth-child(2) { bottom: 0; left: 50%; transform: translateX(-50%); opacity: 0.5; }
+    .loader-morph { width: 48px; height: 48px; background: currentColor; animation: morph 2s ease-in-out infinite; }
+    .loader-ripple { width: 48px; height: 48px; position: relative; }
+    .loader-ripple span { position: absolute; inset: 0; border: 3px solid currentColor; border-radius: 50%; animation: ripple 1.5s ease-out infinite; }
+    .loader-ripple span:nth-child(2) { animation-delay: 0.5s; }
+    .loader-flip { width: 40px; height: 40px; background: currentColor; animation: flip 1.5s infinite; }
+    .loader-typing { display: flex; gap: 6px; }
+    .loader-typing span { width: 12px; height: 12px; background: currentColor; border-radius: 50%; animation: typing 1.4s ease-in-out infinite; }
+    .loader-typing span:nth-child(2) { animation-delay: 0.2s; }
+    .loader-typing span:nth-child(3) { animation-delay: 0.4s; }
+    .loader-progress { width: 80px; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
+    .loader-progress span { display: block; height: 100%; background: currentColor; border-radius: 3px; animation: progress 2s ease-in-out infinite; }
+    .loader-swing { width: 48px; height: 48px; position: relative; }
+    .loader-swing::before { content: ''; position: absolute; top: 0; left: 50%; width: 4px; height: 30px; background: currentColor; transform-origin: top center; animation: swing 0.8s ease-in-out infinite; border-radius: 2px; }
+    .loader-swing::after { content: ''; position: absolute; top: 28px; left: 50%; width: 16px; height: 16px; background: currentColor; border-radius: 50%; transform: translateX(-50%); animation: swing 0.8s ease-in-out infinite; }
+    .loader-dna { display: flex; gap: 8px; align-items: center; height: 48px; }
+    .loader-dna span { width: 8px; height: 8px; background: currentColor; border-radius: 50%; animation: dna 0.8s ease-in-out infinite; }
+    .loader-dna span:nth-child(2) { animation-delay: 0.1s; }
+    .loader-dna span:nth-child(3) { animation-delay: 0.2s; }
+    .loader-dna span:nth-child(4) { animation-delay: 0.3s; }
+    .loader-dna span:nth-child(5) { animation-delay: 0.4s; }
+    .loader-dna span:nth-child(6) { animation-delay: 0.5s; }
+    .loader-spiral { width: 48px; height: 48px; border: 3px solid rgba(255,255,255,0.2); border-top-color: currentColor; border-right-color: currentColor; border-radius: 50%; animation: spiral 1.2s linear infinite; }
+    .loader-grid { display: grid; grid-template-columns: repeat(3, 8px); gap: 4px; }
+    .loader-grid span { width: 8px; height: 8px; background: currentColor; border-radius: 2px; animation: grid-pulse 1.2s ease-in-out infinite; }
+    .loader-grid span:nth-child(1) { animation-delay: 0s; }
+    .loader-grid span:nth-child(2) { animation-delay: 0.1s; }
+    .loader-grid span:nth-child(3) { animation-delay: 0.2s; }
+    .loader-grid span:nth-child(4) { animation-delay: 0.1s; }
+    .loader-grid span:nth-child(5) { animation-delay: 0.2s; }
+    .loader-grid span:nth-child(6) { animation-delay: 0.3s; }
+    .loader-grid span:nth-child(7) { animation-delay: 0.2s; }
+    .loader-grid span:nth-child(8) { animation-delay: 0.3s; }
+    .loader-grid span:nth-child(9) { animation-delay: 0.4s; }
+    .loader-pulse-ring { width: 48px; height: 48px; position: relative; }
+    .loader-pulse-ring span { position: absolute; inset: 0; border: 2px solid currentColor; border-radius: 50%; animation: pulse-ring 1.5s ease-out infinite; }
+    .loader-pulse-ring span:nth-child(2) { animation-delay: 0.5s; }
+    .loader-circle { width: 48px; height: 48px; position: relative; animation: circle-rotate 3s linear infinite; }
+    .loader-circle span { position: absolute; width: 8px; height: 8px; background: currentColor; border-radius: 50%; }
+    .loader-circle span:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); }
+    .loader-circle span:nth-child(2) { top: 50%; right: 0; transform: translateY(-50%); }
+    .loader-circle span:nth-child(3) { bottom: 0; left: 50%; transform: translateX(-50%); opacity: 0.5; }
+    .loader-circle span:nth-child(4) { top: 50%; left: 0; transform: translateY(-50%); opacity: 0.5; }
+    .loader-bars { display: flex; gap: 3px; align-items: center; height: 48px; }
+    .loader-bars span { width: 4px; height: 100%; background: currentColor; border-radius: 2px; animation: bars-fade 1s ease-in-out infinite; }
+    .loader-bars span:nth-child(1) { animation-delay: 0s; }
+    .loader-bars span:nth-child(2) { animation-delay: 0.1s; }
+    .loader-bars span:nth-child(3) { animation-delay: 0.2s; }
+    .loader-bars span:nth-child(4) { animation-delay: 0.3s; }
+    .loader-bars span:nth-child(5) { animation-delay: 0.4s; }
+    .loader-hourglass { width: 40px; height: 50px; position: relative; animation: hourglass 1.5s ease-in-out infinite; }
+    .loader-hourglass::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 20px solid currentColor; }
+    .loader-hourglass::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-bottom: 20px solid currentColor; opacity: 0.5; }
+    .loader-ladder { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+    .loader-ladder span { width: 12px; height: 12px; background: currentColor; border-radius: 50%; animation: climb 1.4s ease-in-out infinite; }
+    .loader-ladder span:nth-child(1) { animation-delay: 0s; }
+    .loader-ladder span:nth-child(2) { animation-delay: 0.2s; }
+    .loader-ladder span:nth-child(3) { animation-delay: 0.4s; }
+    .loader-double-ring { width: 48px; height: 48px; position: relative; }
+    .loader-double-ring span:nth-child(1) { position: absolute; inset: 0; border: 3px solid rgba(255,255,255,0.2); border-radius: 50%; }
+    .loader-double-ring span:nth-child(2) { position: absolute; inset: 8px; border: 3px solid currentColor; border-radius: 50%; animation: spin 1.5s linear infinite; }
+    .loader-pulse-circle { width: 48px; height: 48px; }
+    .loader-pulse-circle circle { animation: pulse-ring 1.5s ease-in-out infinite; fill: currentColor; }
+    .loader-squares { width: 48px; height: 48px; position: relative; animation: square-spin 2s linear infinite; }
+    .loader-squares span { position: absolute; width: 20px; height: 20px; border: 2px solid currentColor; background: transparent; }
+    .loader-squares span:nth-child(1) { top: 0; left: 0; }
+    .loader-squares span:nth-child(2) { top: 0; right: 0; opacity: 0.6; }
+    .loader-squares span:nth-child(3) { bottom: 0; right: 0; opacity: 0.3; }
+    .loader-squares span:nth-child(4) { bottom: 0; left: 0; opacity: 0.2; }
+    .loader-bounce-dots { display: flex; gap: 8px; }
+    .loader-bounce-dots span { width: 10px; height: 10px; background: currentColor; border-radius: 50%; animation: bounce-dots 1.2s ease-in-out infinite; }
+    .loader-bounce-dots span:nth-child(1) { animation-delay: 0s; }
+    .loader-bounce-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loader-bounce-dots span:nth-child(3) { animation-delay: 0.4s; }
+    .loader-expand { width: 48px; height: 48px; position: relative; }
+    .loader-expand span { position: absolute; inset: 0; border: 2px solid currentColor; border-radius: 50%; animation: expand 1.5s ease-out infinite; }
+    .loader-expand span:nth-child(2) { animation-delay: 0.3s; }
+    .loader-twist { width: 48px; height: 48px; border: 3px solid currentColor; animation: twist 2s ease-in-out infinite; }
+
+    /* UI Utilities */
+    .animation-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+    .animation-card:hover { transform: translateY(-4px); }
+    .animation-card.active { transform: scale(1.02); }
+    .tab-button { transition: all 0.3s ease; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; }
+    .tab-button.active { font-weight: 600; }
+    .tab-button:not(.active) { opacity: 0.6; }
+    .tab-button:hover:not(.active) { opacity: 0.8; }
+    .fav-btn { font-size: 1.2rem; cursor: pointer; transition: all 0.2s ease; }
+    .fav-btn:hover { transform: scale(1.2); }
+    .fav-btn.favorited { animation: favorite-pop 0.4s ease; }
+    .copy-btn-active { animation: copy-feedback 0.4s ease; }
+
+    @media (max-width: 640px) {
+      .animation-card { min-height: 120px; }
+      .featured-display { min-height: 160px; }
+    }
+
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="h-full overflow-hidden">
+  <div id="app-container" class="h-full overflow-auto w-full" style="background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 50%, #2d1b4e 100%);">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 backdrop-blur-md w-full" style="background: rgba(15, 15, 35, 0.8); border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <h1 id="page-title" class="text-xl sm:text-2xl font-bold mb-1" style="font-family: 'Syne', sans-serif; color: #f0f0f0;">Loading Animations</h1>
+        <p id="subtitle" class="text-xs sm:text-sm opacity-80" style="font-family: 'Space Mono', monospace; color: #a5b4fc;">Click any animation to see it featured</p>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <!-- Featured Display -->
+      <div class="mb-8">
+        <div id="featured-display" class="rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center" style="background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); min-height: 200px;">
+          <div id="featured-loader" class="mb-6" style="color: #818cf8;"></div>
+          <p id="featured-name" class="text-lg sm:text-xl font-semibold" style="font-family: 'Syne', sans-serif; color: #f0f0f0;">Spinner</p>
+          <p id="featured-desc" class="text-xs sm:text-sm mt-2 opacity-70 text-center" style="font-family: 'Space Mono', monospace; color: #a5b4fc;"></p>
+          
+          <div id="code-preview-section" class="w-full mt-6 pt-6 border-t border-white/10 hidden sm:block">
+            <div class="flex justify-between items-center mb-3">
+              <span class="text-xs opacity-60 uppercase tracking-wider" style="font-family: 'Space Mono', monospace; color: #a5b4fc;">HTML Code</span>
+              <button id="copy-btn" class="text-xs px-2 py-1 rounded hover:bg-white/10 transition-colors" style="color: #818cf8;">Copy</button>
+            </div>
+            <div class="bg-black/30 rounded-lg p-3 overflow-x-auto">
+              <code id="code-preview" class="text-xs font-mono" style="color: #a5b4fc;"></code>
+            </div>
+            <div id="copy-feedback" class="text-xs mt-2 opacity-0 transition-opacity duration-300" style="color: #4ade80;">✓ Copied!</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="mb-8 flex flex-wrap gap-2 sm:gap-3">
+        <button class="tab-button active" data-category="all" style="background: rgba(129, 140, 248, 0.15); color: #818cf8; border: 1px solid rgba(129, 140, 248, 0.4);">All</button>
+        <button class="tab-button" data-category="basic" style="background: rgba(255,255,255,0.05); color: #f0f0f0; border: 1px solid rgba(255,255,255,0.1);">Basic</button>
+        <button class="tab-button" data-category="advanced" style="background: rgba(255,255,255,0.05); color: #f0f0f0; border: 1px solid rgba(255,255,255,0.1);">Advanced</button>
+        <button class="tab-button" data-category="organic" style="background: rgba(255,255,255,0.05); color: #f0f0f0; border: 1px solid rgba(255,255,255,0.1);">Organic</button>
+      </div>
+
+      <!-- Grid -->
+      <div class="mb-10">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6" id="animations-grid"></div>
+      </div>
+
+      <!-- Controls -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+        <div class="rounded-2xl p-4 sm:p-6" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+          <label class="block text-xs sm:text-sm font-medium mb-3" style="font-family: 'Space Mono', monospace; color: #a5b4fc;">Animation Speed</label>
+          <div class="flex items-center gap-2 sm:gap-4 mb-3">
+            <span class="text-xs opacity-60" style="color: #a5b4fc;">0.5x</span>
+            <input type="range" id="speed-slider" min="0.5" max="2" step="0.1" value="1" class="flex-1 h-2 rounded-full appearance-none cursor-pointer" style="background: rgba(129, 140, 248, 0.3);">
+            <span class="text-xs opacity-60" style="color: #a5b4fc;">2x</span>
+          </div>
+          <p id="speed-display" class="text-center font-mono text-xs sm:text-sm" style="color: #818cf8;">1x speed</p>
+        </div>
+
+        <div class="rounded-2xl p-4 sm:p-6" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+          <label class="block text-xs sm:text-sm font-medium mb-3" style="font-family: 'Space Mono', monospace; color: #a5b4fc;">Loader Size</label>
+          <div class="flex items-center gap-2 sm:gap-4 mb-3">
+            <span class="text-xs opacity-60" style="color: #a5b4fc;">Small</span>
+            <input type="range" id="size-slider" min="0.5" max="2" step="0.1" value="1" class="flex-1 h-2 rounded-full appearance-none cursor-pointer" style="background: rgba(129, 140, 248, 0.3);">
+            <span class="text-xs opacity-60" style="color: #a5b4fc;">Large</span>
+          </div>
+          <p id="size-display" class="text-center font-mono text-xs sm:text-sm" style="color: #818cf8;">100%</p>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-3 sm:gap-4 mb-10">
+        <div class="rounded-2xl p-3 sm:p-4 text-center" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+          <p class="text-xs opacity-60" style="color: #a5b4fc;">Total Loaders</p>
+          <p class="text-2xl sm:text-3xl font-bold mt-1" style="color: #818cf8;" id="total-count">28</p>
+        </div>
+        <div class="rounded-2xl p-3 sm:p-4 text-center" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+          <p class="text-xs opacity-60" style="color: #a5b4fc;">Current</p>
+          <p class="text-xl sm:text-2xl font-bold mt-1" style="color: #818cf8;" id="current-name">Spinner</p>
+        </div>
+        <div class="rounded-2xl p-3 sm:p-4 text-center" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+          <p class="text-xs opacity-60" style="color: #a5b4fc;">Favorites</p>
+          <p class="text-2xl sm:text-3xl font-bold mt-1" style="color: #818cf8;" id="fav-count">0</p>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <footer class="text-center pb-10">
+        <p id="footer-text" class="text-xs sm:text-sm opacity-50" style="font-family: 'Space Mono', monospace; color: #a5b4fc;">28 unique loading animations by Hirunthakan to explore</p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    const defaultConfig = {
+      page_title: 'Loading Animations',
+      subtitle: 'Click any animation to see it featured',
+      footer_text: '28 unique loading animations to explore',
+      primary_color: '#818cf8',
+      background_color: '#0f0f23',
+      surface_color: 'rgba(255,255,255,0.05)',
+      text_color: '#f0f0f0',
+      secondary_text_color: '#a5b4fc',
+      font_family: 'Syne',
+      font_size: 16
+    };
+
+    const animations = [
+      { id: 'spinner', name: 'Spinner', desc: 'Classic rotating circle loader', html: '<div class="loader-spinner"></div>', category: 'basic' },
+      { id: 'pulse', name: 'Pulse', desc: 'Rhythmic pulsing dots', html: '<div class="loader-pulse"><span></span><span></span><span></span></div>', category: 'basic' },
+      { id: 'bounce', name: 'Bounce', desc: 'Playful bouncing balls', html: '<div class="loader-bounce"><span></span><span></span><span></span></div>', category: 'basic' },
+      { id: 'wave', name: 'Wave', desc: 'Audio equalizer style bars', html: '<div class="loader-wave"><span></span><span></span><span></span><span></span><span></span></div>', category: 'basic' },
+      { id: 'typing', name: 'Typing', desc: 'Chat typing indicator', html: '<div class="loader-typing"><span></span><span></span><span></span></div>', category: 'basic' },
+      { id: 'progress', name: 'Progress', desc: 'Sliding progress bar', html: '<div class="loader-progress"><span></span></div>', category: 'basic' },
+      { id: 'circle', name: 'Dot Circle', desc: 'Four rotating dots', html: '<div class="loader-circle"><span></span><span></span><span></span><span></span></div>', category: 'basic' },
+      { id: 'bars', name: 'Bars', desc: 'Five fading bars', html: '<div class="loader-bars"><span></span><span></span><span></span><span></span><span></span></div>', category: 'basic' },
+      { id: 'bounce-dots', name: 'Bounce Dots', desc: 'Three bouncing orbs', html: '<div class="loader-bounce-dots"><span></span><span></span><span></span></div>', category: 'basic' },
+      { id: 'orbit', name: 'Orbit', desc: 'Spinning orbital dots', html: '<div class="loader-orbit"><span></span><span></span></div>', category: 'advanced' },
+      { id: 'morph', name: 'Morph', desc: 'Shape-shifting square to circle', html: '<div class="loader-morph"></div>', category: 'advanced' },
+      { id: 'ripple', name: 'Ripple', desc: 'Expanding water ripple effect', html: '<div class="loader-ripple"><span></span><span></span></div>', category: 'advanced' },
+      { id: 'flip', name: 'Flip', desc: '3D flipping cube', html: '<div class="loader-flip"></div>', category: 'advanced' },
+      { id: 'spiral', name: 'Spiral', desc: 'Rotating spiral effect', html: '<div class="loader-spiral"></div>', category: 'advanced' },
+      { id: 'grid', name: 'Grid', desc: 'Pulsing dot grid', html: '<div class="loader-grid"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>', category: 'advanced' },
+      { id: 'double-ring', name: 'Double Ring', desc: 'Nested spinning rings', html: '<div class="loader-double-ring"><span></span><span></span></div>', category: 'advanced' },
+      { id: 'squares', name: 'Squares', desc: 'Rotating nested squares', html: '<div class="loader-squares"><span></span><span></span><span></span><span></span></div>', category: 'advanced' },
+      { id: 'expand', name: 'Expand', desc: 'Expanding circle rings', html: '<div class="loader-expand"><span></span><span></span></div>', category: 'advanced' },
+      { id: 'twist', name: 'Twist', desc: 'Morphing twisted ring', html: '<div class="loader-twist"></div>', category: 'advanced' },
+      { id: 'gradient', name: 'Gradient Ring', desc: 'Multi-color spinning ring', html: '<div class="loader-spinner" style="border: 4px solid; border-image: linear-gradient(45deg, #818cf8, #ec4899, #f59e0b) 1;"></div>', category: 'advanced' },
+      { id: 'swing', name: 'Swing', desc: 'Pendulum swinging motion', html: '<div class="loader-swing"></div>', category: 'organic' },
+      { id: 'dna', name: 'DNA', desc: 'DNA helix wave pattern', html: '<div class="loader-dna"><span></span><span></span><span></span><span></span><span></span><span></span></div>', category: 'organic' },
+      { id: 'pulse-ring', name: 'Pulse Ring', desc: 'Expanding ring waves', html: '<div class="loader-pulse-ring"><span></span><span></span></div>', category: 'organic' },
+      { id: 'hourglass', name: 'Hourglass', desc: 'Flipping sand effect', html: '<div class="loader-hourglass"></div>', category: 'organic' },
+      { id: 'ladder', name: 'Ladder', desc: 'Climbing dots pattern', html: '<div class="loader-ladder"><span></span><span></span><span></span></div>', category: 'organic' },
+      { id: 'pulse-circle', name: 'Pulse Circle', desc: 'Radial pulse waves', html: '<svg class="loader-pulse-circle" viewBox="0 0 48 48"><circle cx="24" cy="24" r="2"></circle></svg>', category: 'organic' },
+      { id: 'hex', name: 'Hexagon', desc: 'Rotating hexagon', html: '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 48px; height: 48px; animation: spin 2s linear infinite;"><path d="M50 10 L90 35 L90 85 L50 110 L10 85 L10 35 Z" fill="none" stroke="currentColor" stroke-width="2"/></svg>', category: 'organic' }
+    ];
+
+    let currentAnimation = animations[0];
+    let animationSpeed = 1;
+    let animationSize = 1;
+    let currentCategory = 'all';
+    let favorites = new Set();
+
+    function renderGrid() {
+      const filtered = currentCategory === 'all' ? animations : animations.filter(a => a.category === currentCategory);
+      const grid = document.getElementById('animations-grid');
+      
+      grid.innerHTML = filtered.map(anim => `
+        <button 
+          class="animation-card rounded-2xl p-3 sm:p-5 flex flex-col items-center justify-center relative ${currentAnimation.id === anim.id ? 'active' : ''}"
+          style="background: ${currentAnimation.id === anim.id ? 'rgba(129, 140, 248, 0.15)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${currentAnimation.id === anim.id ? 'rgba(129, 140, 248, 0.4)' : 'rgba(255,255,255,0.1)'}; min-height: 120px;"
+          data-id="${anim.id}"
+          aria-label="Select ${anim.name} animation"
+        >
+          <div class="absolute top-2 right-2 fav-btn" data-fav="${anim.id}" style="z-index: 10;">${favorites.has(anim.id) ? '❤️' : '🤍'}</div>
+          <div class="loader-container mb-3" style="color: ${window.elementSdk?.config?.primary_color || defaultConfig.primary_color}; transform: scale(${animationSize});">
+            ${anim.html}
+          </div>
+          <span class="text-xs sm:text-sm font-semibold text-center" style="font-family: 'Syne', sans-serif; color: ${window.elementSdk?.config?.text_color || defaultConfig.text_color};">${anim.name}</span>
+        </button>
+      `).join('');
+
+      grid.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          if (e.target.classList.contains('fav-btn')) return;
+          const anim = animations.find(a => a.id === btn.dataset.id);
+          if (anim) {
+            currentAnimation = anim;
+            updateFeatured();
+            renderGrid();
+            document.getElementById('current-name').textContent = anim.name;
+          }
+        });
+      });
+
+      grid.querySelectorAll('.fav-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.fav;
+          if (favorites.has(id)) {
+            favorites.delete(id);
+            btn.textContent = '🤍';
+          } else {
+            favorites.add(id);
+            btn.textContent = '❤️';
+            btn.classList.add('favorited');
+            setTimeout(() => btn.classList.remove('favorited'), 400);
+          }
+          document.getElementById('fav-count').textContent = favorites.size;
+        });
+      });
+    }
+
+    function updateFeatured() {
+      const featuredLoader = document.getElementById('featured-loader');
+      const featuredName = document.getElementById('featured-name');
+      const featuredDesc = document.getElementById('featured-desc');
+      const codePreview = document.getElementById('code-preview');
+      
+      featuredLoader.innerHTML = currentAnimation.html;
+      featuredLoader.style.transform = `scale(${animationSize})`;
+      featuredName.textContent = currentAnimation.name;
+      featuredDesc.textContent = currentAnimation.desc;
+      codePreview.textContent = currentAnimation.html;
+    }
+
+    function updateAnimationSpeed(speed) {
+      animationSpeed = speed;
+      document.querySelectorAll('[class*="loader-"] *, [class*="loader-"]').forEach(el => {
+        const computed = getComputedStyle(el);
+        if (computed.animationDuration && computed.animationDuration !== 'auto') {
+          const baseDuration = parseFloat(computed.animationDuration);
+          el.style.animationDuration = `${baseDuration / speed}s`;
+        }
+      });
+      document.getElementById('speed-display').textContent = `${speed}x speed`;
+    }
+
+    function updateAnimationSize(size) {
+      animationSize = size;
+      document.querySelectorAll('.loader-container').forEach(el => {
+        el.style.transform = `scale(${size})`;
+      });
+      document.getElementById('featured-loader').style.transform = `scale(${size})`;
+      document.getElementById('size-display').textContent = `${Math.round(size * 100)}%`;
+    }
+
+    document.getElementById('speed-slider').addEventListener('input', (e) => {
+      updateAnimationSpeed(parseFloat(e.target.value));
+    });
+
+    document.getElementById('size-slider').addEventListener('input', (e) => {
+      updateAnimationSize(parseFloat(e.target.value));
+    });
+
+    document.querySelectorAll('.tab-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-button').forEach(b => {
+          b.classList.remove('active');
+          b.style.background = 'rgba(255,255,255,0.05)';
+          b.style.color = '#f0f0f0';
+          b.style.border = '1px solid rgba(255,255,255,0.1)';
+        });
+        btn.classList.add('active');
+        btn.style.background = 'rgba(129, 140, 248, 0.15)';
+        btn.style.color = '#818cf8';
+        btn.style.border = '1px solid rgba(129, 140, 248, 0.4)';
+        currentCategory = btn.dataset.category;
+        renderGrid();
+      });
+    });
+
+    document.getElementById('copy-btn').addEventListener('click', () => {
+      const code = document.getElementById('code-preview').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('copy-btn');
+        const feedback = document.getElementById('copy-feedback');
+        btn.classList.add('copy-btn-active');
+        feedback.style.opacity = '1';
+        setTimeout(() => {
+          btn.classList.remove('copy-btn-active');
+          feedback.style.opacity = '0';
+        }, 2000);
+      });
+    });
+
+    async function onConfigChange(config) {
+      document.getElementById('page-title').textContent = config.page_title || defaultConfig.page_title;
+      document.getElementById('page-title').style.color = config.text_color || defaultConfig.text_color;
+      document.getElementById('page-title').style.fontFamily = `${config.font_family || defaultConfig.font_family}, sans-serif`;
+      document.getElementById('page-title').style.fontSize = `${(config.font_size || defaultConfig.font_size) * 1.5}px`;
+      
+      document.getElementById('subtitle').textContent = config.subtitle || defaultConfig.subtitle;
+      document.getElementById('subtitle').style.color = config.secondary_text_color || defaultConfig.secondary_text_color;
+      
+      document.getElementById('footer-text').textContent = config.footer_text || defaultConfig.footer_text;
+      
+      document.getElementById('featured-loader').style.color = config.primary_color || defaultConfig.primary_color;
+      document.getElementById('featured-name').style.color = config.text_color || defaultConfig.text_color;
+      document.getElementById('featured-desc').style.color = config.secondary_text_color || defaultConfig.secondary_text_color;
+      
+      document.querySelectorAll('.loader-container').forEach(el => {
+        el.style.color = config.primary_color || defaultConfig.primary_color;
+      });
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+          { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+          { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+          { get: () => config.primary_color || defaultConfig.primary_color, set: (v) => { config.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); } },
+          { get: () => config.secondary_text_color || defaultConfig.secondary_text_color, set: (v) => { config.secondary_text_color = v; window.elementSdk.setConfig({ secondary_text_color: v }); } }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+        }
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['page_title', config.page_title || defaultConfig.page_title],
+        ['subtitle', config.subtitle || defaultConfig.subtitle],
+        ['footer_text', config.footer_text || defaultConfig.footer_text]
+      ]);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({ defaultConfig, onConfigChange, mapToCapabilities, mapToEditPanelValues });
+    }
+
+    renderGrid();
+    updateFeatured();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cf644ee769a8228',t:'MTc3MTM0MTYzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
