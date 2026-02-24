@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elite Pro Landing</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: 'Segoe UI', sans-serif;
+    scroll-behavior:smooth;
+}
+
+body{
+    background:#0f2027;
+    color:white;
+}
+
+/* NAVBAR */
+nav{
+    position:fixed;
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px 50px;
+    background:rgba(0,0,0,0.6);
+    backdrop-filter:blur(10px);
+    z-index:1000;
+}
+
+nav h1{
+    font-size:26px;
+    letter-spacing:2px;
+}
+
+nav ul{
+    list-style:none;
+    display:flex;
+    gap:30px;
+}
+
+nav ul li a{
+    text-decoration:none;
+    color:white;
+    font-weight:500;
+    transition:0.3s;
+}
+
+nav ul li a:hover{
+    color:#00f5ff;
+}
+
+.menu-toggle{
+    display:none;
+    font-size:28px;
+    cursor:pointer;
+}
+
+/* HERO */
+.hero{
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    padding:20px;
+    background:linear-gradient(-45deg,#0f2027,#203a43,#2c5364,#1c1c1c);
+    background-size:400% 400%;
+    animation:gradient 8s ease infinite;
+}
+
+@keyframes gradient{
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
+
+.hero h2{
+    font-size:52px;
+    margin-bottom:20px;
+}
+
+.hero p{
+    max-width:600px;
+    margin-bottom:30px;
+    opacity:0.9;
+}
+
+.hero button{
+    padding:15px 35px;
+    border:none;
+    border-radius:30px;
+    background:#00f5ff;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.hero button:hover{
+    background:white;
+    transform:scale(1.05);
+}
+
+/* FEATURES */
+.features{
+    padding:100px 20px;
+    text-align:center;
+}
+
+.features h2{
+    font-size:40px;
+    margin-bottom:50px;
+}
+
+.feature-container{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:30px;
+}
+
+.card{
+    width:280px;
+    padding:30px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(15px);
+    box-shadow:0 8px 20px rgba(0,0,0,0.4);
+    transition:0.4s;
+    opacity:0;
+    transform:translateY(40px);
+}
+
+.card.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+.card:hover{
+    transform:translateY(-10px);
+}
+
+/* CTA */
+.cta{
+    padding:100px 20px;
+    text-align:center;
+    background:linear-gradient(135deg,#00f5ff,#00c3ff);
+    color:black;
+}
+
+.cta h2{
+    font-size:42px;
+    margin-bottom:20px;
+}
+
+.cta button{
+    padding:15px 35px;
+    border:none;
+    border-radius:30px;
+    background:black;
+    color:white;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.cta button:hover{
+    background:white;
+    color:black;
+}
+
+/* FOOTER */
+footer{
+    text-align:center;
+    padding:30px;
+    background:#000;
+}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+    nav ul{
+        position:absolute;
+        top:80px;
+        right:0;
+        background:#111;
+        flex-direction:column;
+        width:200px;
+        display:none;
+        padding:20px;
+    }
+
+    nav ul.active{
+        display:flex;
+    }
+
+    .menu-toggle{
+        display:block;
+    }
+}
+</style>
+</head>
+<body>
+
+<nav>
+    <h1>ElitePro</h1>
+    <ul id="menu">
+        <li><a href="#">Home</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#cta">Start</a></li>
+    </ul>
+    <div class="menu-toggle" onclick="toggleMenu()">☰</div>
+</nav>
+
+<section class="hero">
+    <h2>Next Level Web Design 🚀</h2>
+    <p>Create powerful, modern and animated websites using advanced UI techniques.</p>
+    <button>Get Started</button>
+</section>
+
+<section class="features" id="features">
+    <h2>Powerful Features</h2>
+    <div class="feature-container">
+        <div class="card">⚡ Super Fast Performance</div>
+        <div class="card">📱 Fully Responsive Design</div>
+        <div class="card">🎨 Modern UI Effects</div>
+        <div class="card">🔒 Secure Structure</div>
+        <div class="card">🌍 SEO Friendly</div>
+        <div class="card">💎 Premium Look</div>
+    </div>
+</section>
+
+<section class="cta" id="cta">
+    <h2>Ready to Build Something Big?</h2>
+    <button>Join Now</button>
+</section>
+
+<footer>
+    © 2026 ElitePro | Built by Hirunthakan🔥
+</footer>
+
+<script>
+function toggleMenu(){
+    document.getElementById("menu").classList.toggle("active");
+}
+
+// Scroll animation
+const cards = document.querySelectorAll(".card");
+window.addEventListener("scroll", ()=>{
+    cards.forEach(card=>{
+        const position = card.getBoundingClientRect().top;
+        const screenHeight = window.innerHeight;
+        if(position < screenHeight - 100){
+            card.classList.add("show");
+        }
+    });
+});
+</script>
+
+</body>
+          </html>
