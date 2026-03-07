@@ -1,244 +1,491 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI Tools Explorer</title>
+    <meta charset="UTF-8">
+    <!-- Critical for mobile: prevents zooming and ensures correct width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Nexus | Mobile Optimized</title>
+    <style>
+        /* --- 1. Core Variables & Reset --- */
+        :root {
+            --bg-dark: #0b0f19;
+            --bg-card: #151b2b;
+            --bg-card-hover: #1e2638;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --accent: #8b5cf6;
+            --gradient-main: linear-gradient(135deg, var(--primary), var(--secondary));
+            --glow: 0 0 20px rgba(99, 102, 241, 0.4);
+            --border: rgba(255, 255, 255, 0.08);
+            --radius: 16px;
+            --radius-sm: 12px;
+            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --header-height: 140px; /* Approximate height for sticky offset */
+        }
 
-<style>
-:root{
-    --bg:#0f2027;
-    --card:#1c2e38;
-    --text:white;
-    --accent:#00f7ff;
-}
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
 
-body{
-    margin:0;
-    font-family:Segoe UI, sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    transition:0.4s;
-}
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-stack);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            /* Prevent horizontal scroll on body */
+            width: 100%; 
+        }
 
-.light{
-    --bg:#f4f4f4;
-    --card:white;
-    --text:black;
-    --accent:#0077ff;
-}
+        /* Background Ambient Glow */
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            width: 60vw;
+            height: 60vw;
+            border-radius: 50%;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.4;        }
+        body::before {
+            top: -20%; left: -20%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+        }
+        body::after {
+            bottom: -20%; right: -20%;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%);
+        }
 
-header{
-    text-align:center;
-    padding:20px;
-}
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 1.5rem 1rem; /* Reduced padding for mobile */
+            width: 100%;
+        }
 
-.controls{
-    display:flex;
-    flex-wrap:wrap;
-    justify-content:center;
-    gap:8px;
-    margin-bottom:15px;
-}
+        /* --- 2. Header Section --- */
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: slideDown 0.8s ease-out;
+        }
 
-input{
-    padding:8px;
-    border-radius:20px;
-    border:none;
-    width:200px;
-}
+        h1 {
+            font-size: 2.5rem; /* Smaller font for mobile */
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+            background: var(--gradient-main);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-button{
-    padding:7px 12px;
-    border:none;
-    border-radius:20px;
-    cursor:pointer;
-    background:var(--accent);
-    font-weight:bold;
-}
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
 
-.container{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:15px;
-    padding:20px;
-}
+        /* --- 3. Control Panel (Sticky & Mobile Optimized) --- */
+        .controls-wrapper {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(16px);            background: rgba(11, 15, 25, 0.85);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
 
-.card{
-    background:var(--card);
-    padding:15px;
-    border-radius:12px;
-    transition:0.3s;
-    cursor:pointer;
-}
+        .controls {
+            display: flex;
+            flex-direction: column; /* Stack vertically on mobile */
+            gap: 1rem;
+            align-items: stretch;
+        }
 
-.card:hover{
-    transform:scale(1.05);
-    box-shadow:0 0 15px var(--accent);
-}
+        .search-container {
+            position: relative;
+            width: 100%;
+        }
 
-/* MODAL */
-.modal{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.7);
-    justify-content:center;
-    align-items:center;
-    padding:20px;
-}
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 1.2rem;
+        }
 
-.modal-content{
-    background:var(--card);
-    padding:20px;
-    border-radius:12px;
-    max-width:500px;
-    width:100%;
-    position:relative;
-}
+        input#searchInput {
+            width: 100%;
+            padding: 0.9rem 1rem 0.9rem 3rem; /* Larger touch target */
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-main);
+            font-size: 1rem; /* Prevents iOS zoom on focus */
+            transition: all 0.3s ease;
+            -webkit-appearance: none;
+        }
 
-.close{
-    position:absolute;
-    right:15px;
-    top:10px;
-    font-size:20px;
-    cursor:pointer;
-    font-weight:bold;
-}
+        input#searchInput:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
 
-footer{
-    text-align:center;
-    padding:10px;
-    font-size:14px;
-    opacity:0.7;
-}
-</style>
+        /* Horizontal Scrollable Categories */
+        .categories {
+            display: flex;
+            gap: 0.75rem;
+            overflow-x: auto;            padding: 0.25rem 0.25rem 1rem 0.25rem; /* Bottom padding for scrollbar space */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
+            scroll-behavior: smooth;
+        }
+        .categories::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        .cat-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.6rem 1.2rem;
+            border-radius: 99px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            white-space: nowrap; /* Prevents text wrapping */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0; /* Ensures buttons don't squish */
+        }
+
+        .cat-btn:active {
+            transform: scale(0.95);
+        }
+
+        .cat-btn.active {
+            background: var(--gradient-main);
+            color: white;
+            border-color: transparent;
+            box-shadow: var(--glow);
+        }
+
+        /* --- 4. Grid Layout (Responsive) --- */
+        .grid {
+            display: grid;
+            /* 1 column on mobile, 2 on tablet, 3+ on desktop */
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* --- 5. Card Design (Touch Optimized) --- */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;            opacity: 0;
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .card:active {
+            transform: scale(0.98); /* Touch feedback */
+        }
+
+        @media (hover: hover) {
+            .card:hover {
+                transform: translateY(-5px);
+                background: var(--bg-card-hover);
+                border-color: rgba(99, 102, 241, 0.3);
+                box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5);
+            }
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 3px;
+            background: var(--gradient-main);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+        }
+        @media (hover: hover) {
+            .card:hover::after { transform: scaleX(1); }
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .meta-info { flex: 1; min-width: 0; } /* min-width 0 prevents text overflow */
+
+        .tool-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tool-cat {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--accent);
+            font-weight: 600;
+            background: rgba(139, 92, 246, 0.15);
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 1.25rem;
+            flex-grow: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid var(--border);
+            padding-top: 1rem;
+            margin-top: auto;
+        }
+
+        .price-tag {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.05);
+            padding: 0.3rem 0.6rem;            border-radius: 6px;
+        }
+
+        .btn-visit {
+            text-decoration: none;
+            color: white;
+            background: var(--gradient-main);
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: filter 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 100px; /* Ensure button is tappable */
+            justify-content: center;
+        }
+
+        .btn-visit:active {
+            filter: brightness(0.8);
+        }
+
+        /* --- 6. Utilities & Animations --- */
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- 7. Tablet & Desktop Adjustments --- */
+        @media (min-width: 768px) {
+            .controls {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .categories {
+                overflow-x: visible;
+                padding-bottom: 0;
+                flex-wrap: wrap;
+                justify-content: center;            }
+            .cat-btn {
+                flex-shrink: 1;
+            }
+            h1 { font-size: 3.5rem; }
+            .container { padding: 3rem 1.5rem; }
+            .grid { gap: 2rem; }
+        }
+    </style>
 </head>
-
 <body>
 
-<header>
-    <h1>🚀 50+ AI Tools Explorer</h1>
-    <p>Click any tool to see full details</p>
-</header>
+<div class="container">
+    <header>
+        <h1>AI Nexus</h1>
+        <p class="subtitle">Explore the most powerful AI tools curated for creators and developers.</p>
+    </header>
 
-<div class="controls">
-    <input type="text" id="search" placeholder="Search AI tool...">
-    <button onclick="filterCategory('all')">All</button>
-    <button onclick="filterCategory('chat')">Chat</button>
-    <button onclick="filterCategory('image')">Image</button>
-    <button onclick="filterCategory('code')">Code</button>
-    <button onclick="filterCategory('video')">Video</button>
-    <button onclick="filterCategory('audio')">Audio</button>
-    <button onclick="filterCategory('productivity')">Productivity</button>
-    <button onclick="toggleTheme()">🌙 Mode</button>
-</div>
-
-<p style="text-align:center;">Tools Found: <span id="count">0</span></p>
-
-<section class="container" id="toolContainer"></section>
-
-<!-- MODAL -->
-<div class="modal" id="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal()">×</span>
-        <h2 id="modalTitle"></h2>
-        <p id="modalCategory"></p>
-        <p id="modalDescription"></p>
+    <!-- Sticky Controls -->
+    <div class="controls-wrapper">
+        <div class="controls">
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search tools..." aria-label="Search AI tools">
+            </div>
+            <div class="categories" id="categoryContainer" role="tablist">
+                <button class="cat-btn active" data-cat="all" role="tab" aria-selected="true">All</button>
+                <button class="cat-btn" data-cat="Text" role="tab">Text</button>
+                <button class="cat-btn" data-cat="Image" role="tab">Image</button>
+                <button class="cat-btn" data-cat="Video" role="tab">Video</button>
+                <button class="cat-btn" data-cat="Code" role="tab">Code</button>
+                <button class="cat-btn" data-cat="Audio" role="tab">Audio</button>
+                <button class="cat-btn" data-cat="Productivity" role="tab">Productivity</button>
+                <button class="cat-btn" data-cat="Research" role="tab">Research</button>
+            </div>
+        </div>
     </div>
-</div>
 
-<footer>
-© 2026 AI Tools Explorer • By Hirunthakan
-</footer>
+    <!-- Main Grid -->
+    <main class="grid" id="toolsGrid" aria-live="polite">
+        <!-- Cards injected via JS -->
+        <div class="no-results" id="noResults">
+            <p>No tools found. Try a different keyword.</p>
+        </div>
+    </main>
+</div>
 
 <script>
-const tools = [
-{name:"ChatGPT",category:"chat",desc:"Advanced conversational AI for writing, coding, research, and learning."},
-{name:"Google Gemini",category:"chat",desc:"Google’s multimodal AI assistant for text, images, and reasoning."},
-{name:"Claude",category:"chat",desc:"AI assistant focused on helpful, safe and long-document reasoning."},
-{name:"Perplexity AI",category:"chat",desc:"AI search engine that provides accurate, cited answers."},
-{name:"Microsoft Copilot",category:"chat",desc:"AI integrated into Microsoft products for productivity."},
-{name:"Character AI",category:"chat",desc:"Chat with custom AI personalities."},
+    // Dataset remains the same as before
+    const aiTools = [        { id: 1, name: "ChatGPT", category: "Text", icon: "💬", desc: "Industry-standard LLM for conversation, coding, and writing.", url: "https://chat.openai.com", price: "Freemium" },
+        { id: 2, name: "Claude 3", category: "Text", icon: "🤖", desc: "Safe and powerful AI assistant with long context windows.", url: "https://claude.ai", price: "Freemium" },
+        { id: 3, name: "Jasper", category: "Text", icon: "✍️", desc: "AI copywriter for marketing teams to generate blogs and ads.", url: "https://jasper.ai", price: "Paid" },
+        { id: 4, name: "GrammarlyGO", category: "Text", icon: "✅", desc: "Advanced grammar checker with generative AI rewriting.", url: "https://grammarly.com", price: "Freemium" },
+        { id: 5, name: "Notion AI", category: "Productivity", icon: "📝", desc: "Integrated AI workspace for summarizing notes and tasks.", url: "https://notion.so", price: "Add-on" },
+        { id: 6, name: "Midjourney", category: "Image", icon: "🎨", desc: "High-fidelity image generation known for artistic style.", url: "https://midjourney.com", price: "Paid" },
+        { id: 7, name: "DALL-E 3", category: "Image", icon: "🖼️", desc: "OpenAI's image generator with precise prompt adherence.", url: "https://openai.com/dall-e-3", price: "Paid" },
+        { id: 8, name: "Stable Diffusion", category: "Image", icon: "🌊", desc: "Open-source image model allowing local deployment.", url: "https://stability.ai", price: "Free/Open" },
+        { id: 9, name: "Canva Magic", category: "Image", icon: "✨", desc: "Design suite with AI tools for editing and generating graphics.", url: "https://canva.com", price: "Freemium" },
+        { id: 10, name: "Runway ML", category: "Video", icon: "🎬", desc: "Professional suite for video editing and text-to-video gen.", url: "https://runwayml.com", price: "Freemium" },
+        { id: 11, name: "HeyGen", category: "Video", icon: "🗣️", desc: "Create realistic AI avatars and talking head videos.", url: "https://heygen.com", price: "Freemium" },
+        { id: 12, name: "Sora", category: "Video", icon: "🎥", desc: "OpenAI's breakthrough text-to-video model (Coming Soon).", url: "#", price: "N/A" },
+        { id: 13, name: "Descript", category: "Video", icon: "✂️", desc: "Edit video by editing text transcript; includes voice cloning.", url: "https://descript.com", price: "Freemium" },
+        { id: 14, name: "GitHub Copilot", category: "Code", icon: "💻", desc: "AI pair programmer suggesting lines inside your editor.", url: "https://github.com/features/copilot", price: "Paid" },
+        { id: 15, name: "Cursor", category: "Code", icon: "⚡", desc: "VS Code fork built with AI-first features for prototyping.", url: "https://cursor.sh", price: "Freemium" },
+        { id: 16, name: "Replit Ghostwriter", category: "Code", icon: "👻", desc: "Cloud IDE with integrated AI for code generation.", url: "https://replit.com", price: "Freemium" },
+        { id: 17, name: "Tabnine", category: "Code", icon: "🛡️", desc: "Privacy-focused code completion tool.", url: "https://tabnine.com", price: "Freemium" },
+        { id: 18, name: "ElevenLabs", category: "Audio", icon: "🎙️", desc: "Best-in-class text-to-speech and voice cloning.", url: "https://elevenlabs.io", price: "Freemium" },
+        { id: 19, name: "Suno AI", category: "Audio", icon: "🎵", desc: "Generate full songs with lyrics and vocals from text.", url: "https://suno.ai", price: "Freemium" },
+        { id: 20, name: "Adobe Podcast", category: "Audio", icon: "🎧", desc: "Enhance speech quality and remove background noise.", url: "https://podcast.adobe.com", price: "Freemium" },
+        { id: 21, name: "Perplexity", category: "Research", icon: "🔎", desc: "AI-powered search engine that cites sources.", url: "https://perplexity.ai", price: "Freemium" },
+        { id: 22, name: "Consensus", category: "Research", icon: "📚", desc: "Search engine for scientific research papers.", url: "https://consensus.app", price: "Freemium" },
+        { id: 23, name: "Gamma", category: "Productivity", icon: "📊", desc: "Generate presentations and webpages from a prompt.", url: "https://gamma.app", price: "Freemium" },
+        { id: 24, name: "Otter.ai", category: "Productivity", icon: "🦦", desc: "Automated meeting notes and transcription service.", url: "https://otter.ai", price: "Freemium" }
+    ];
 
-{name:"Midjourney",category:"image",desc:"High-quality AI image generation tool."},
-{name:"DALL·E",category:"image",desc:"Text-to-image AI by OpenAI."},
-{name:"Leonardo AI",category:"image",desc:"Professional AI art generation platform."},
-{name:"Adobe Firefly",category:"image",desc:"Creative AI tool integrated into Adobe apps."},
-{name:"Canva AI",category:"image",desc:"Design and generate graphics using AI."},
+    let state = { category: 'all', search: '' };
+    const grid = document.getElementById('toolsGrid');
+    const noResults = document.getElementById('noResults');
+    const searchInput = document.getElementById('searchInput');
+    const catButtons = document.querySelectorAll('.cat-btn');
 
-{name:"GitHub Copilot",category:"code",desc:"AI coding assistant for faster development."},
-{name:"Codeium",category:"code",desc:"Free AI code completion tool."},
-{name:"Tabnine",category:"code",desc:"AI code suggestion and autocomplete tool."},
-{name:"Replit Ghostwriter",category:"code",desc:"AI pair programmer in Replit."},
+    function render() {
+        const existingCards = document.querySelectorAll('.card');
+        existingCards.forEach(card => card.remove());
 
-{name:"Runway ML",category:"video",desc:"AI-powered video editing and generation."},
-{name:"Pika Labs",category:"video",desc:"Text-to-video AI generation tool."},
-{name:"Synthesia",category:"video",desc:"Create AI avatar videos easily."},
-{name:"Descript",category:"video",desc:"Edit video and audio using text."},
+        const filtered = aiTools.filter(tool => {
+            const matchCat = state.category === 'all' || tool.category === state.category;
+            const matchSearch = 
+                tool.name.toLowerCase().includes(state.search) || 
+                tool.desc.toLowerCase().includes(state.search) ||
+                tool.price.toLowerCase().includes(state.search);
+            return matchCat && matchSearch;
+        });
 
-{name:"ElevenLabs",category:"audio",desc:"Ultra-realistic AI voice generation."},
-{name:"Murf AI",category:"audio",desc:"AI voiceover creation platform."},
-{name:"AIVA",category:"audio",desc:"AI music composition tool."},
+        noResults.style.display = filtered.length === 0 ? 'block' : 'none';
 
-{name:"Notion AI",category:"productivity",desc:"AI writing and task assistant inside Notion."},
-{name:"Grammarly AI",category:"productivity",desc:"AI grammar and writing enhancement tool."},
-{name:"Jasper AI",category:"productivity",desc:"AI marketing content generator."},
-{name:"Copy.ai",category:"productivity",desc:"AI-powered copywriting assistant."},
-{name:"Otter AI",category:"productivity",desc:"AI meeting transcription tool."},
-{name:"ClickUp AI",category:"productivity",desc:"AI productivity assistant in ClickUp."}
-];
+        const fragment = document.createDocumentFragment();
+        filtered.forEach((tool, index) => {
+            const card = document.createElement('article');            card.className = 'card';
+            card.style.animationDelay = `${index * 0.05}s`; 
+            
+            card.innerHTML = `
+                <div class="card-header">
+                    <div class="icon-box">${tool.icon}</div>
+                    <div class="meta-info">
+                        <h3 class="tool-name">${tool.name}</h3>
+                        <span class="tool-cat">${tool.category}</span>
+                    </div>
+                </div>
+                <p class="desc">${tool.desc}</p>
+                <div class="card-footer">
+                    <span class="price-tag">${tool.price}</span>
+                    <a href="${tool.url}" target="_blank" rel="noopener noreferrer" class="btn-visit">
+                        Visit <span>&rarr;</span>
+                    </a>
+                </div>
+            `;
+            fragment.appendChild(card);
+        });
 
-/* Duplicate tools to exceed 50 */
-while(tools.length < 52){
-    tools.push({...tools[tools.length % 25], name: tools[tools.length % 25].name + " Pro"});
-}
+        grid.appendChild(fragment);
+    }
 
-const container = document.getElementById("toolContainer");
-const searchInput = document.getElementById("search");
-const countDisplay = document.getElementById("count");
-
-function displayTools(list){
-    container.innerHTML="";
-    list.forEach(tool=>{
-        container.innerHTML += `
-            <div class="card" onclick="openModal('${tool.name}','${tool.category}','${tool.desc}')">
-                <h3>${tool.name}</h3>
-                <p>${tool.category.toUpperCase()}</p>
-            </div>
-        `;
+    searchInput.addEventListener('input', (e) => {
+        state.search = e.target.value.toLowerCase().trim();
+        render();
     });
-    countDisplay.textContent = list.length;
-}
 
-function filterCategory(category){
-    if(category==="all") displayTools(tools);
-    else displayTools(tools.filter(t=>t.category===category));
-}
+    catButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            catButtons.forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
+            
+            state.category = btn.dataset.cat;
+            render();
+            
+            // Optional: Scroll categories to ensure active button is visible on mobile
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        });
+    });
 
-searchInput.addEventListener("keyup",function(){
-    const value=this.value.toLowerCase();
-    displayTools(tools.filter(t=>t.name.toLowerCase().includes(value)));
-});
-
-function toggleTheme(){
-    document.body.classList.toggle("light");
-}
-
-/* MODAL FUNCTIONS */
-function openModal(name,category,desc){
-    document.getElementById("modalTitle").innerText=name;
-    document.getElementById("modalCategory").innerText="Category: "+category.toUpperCase();
-    document.getElementById("modalDescription").innerText=desc;
-    document.getElementById("modal").style.display="flex";
-}
-
-function closeModal(){
-    document.getElementById("modal").style.display="none";
-}
-
-displayTools(tools);
+    document.addEventListener('DOMContentLoaded', render);
 </script>
-
-</body>
-</html>
+</body></html>
