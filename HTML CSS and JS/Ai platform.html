@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusAI | Enterprise API Platform</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- VARIABLES & BASE --- */
+        :root {
+            --bg-dark: #030712;
+            --bg-card: #111827;
+            --bg-card-hover: #1f2937;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --secondary: #ec4899;
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.1);
+            --gradient-text: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            --font-ui: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- UTILITIES --- */
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .text-gradient {
+            background: var(--gradient-text);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 99px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+        .btn-primary:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--primary-glow);
+        }
+
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            backdrop-filter: blur(10px);
+        }
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--text-main);
+        }
+
+        /* --- BACKGROUND EFFECTS --- */
+        .glow-bg {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: -1;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* --- NAVIGATION --- */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+            background: rgba(3, 7, 18, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 16px 0;
+        }
+
+        .nav-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .desktop-menu {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .desktop-menu a {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        .desktop-menu a:hover { color: var(--text-main); }
+
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Mobile Menu Overlay */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: var(--bg-dark);
+            z-index: 99;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .mobile-menu.active { transform: translateX(0); }
+        .mobile-menu a { font-size: 1.5rem; color: var(--text-main); }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            padding-top: 160px;
+            padding-bottom: 100px;
+            text-align: center;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: clamp(1.1rem, 2vw, 1.25rem);
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border);
+        }
+        .stat-item h4 { font-size: 1.5rem; color: var(--text-main); }
+        .stat-item p { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* --- INTERACTIVE CODE SECTION --- */
+        .code-demo {
+            padding: 80px 0;
+            background: linear-gradient(180deg, var(--bg-dark) 0%, #0b0f19 100%);
+        }
+
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .demo-text h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .terminal-window {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            font-family: var(--font-code);
+        }
+
+        .terminal-header {
+            background: #161b22;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .lang-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .lang-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .lang-tab.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+
+        .terminal-body {
+            padding: 20px;
+            overflow-x: auto;
+            min-height: 300px;
+        }
+
+        .code-line { display: block; margin-bottom: 4px; }
+        .c-p { color: #ff7b72; } /* pink */
+        .c-b { color: #79c0ff; } /* blue */
+        .c-g { color: #7ee787; } /* green */
+        .c-o { color: #ffa657; } /* orange */
+        .c-y { color: #d2a8ff; } /* purple */
+
+        /* --- FEATURES (Glass Cards) --- */
+        .features { padding: 100px 0; }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            padding: 32px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--gradient-text);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .glass-card:hover::before { opacity: 1; }
+
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        /* --- PRICING --- */
+        .pricing { padding: 100px 0; }
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+        }
+
+        .price-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+        }
+
+        .price-card.popular {
+            border-color: var(--primary);
+            box-shadow: 0 0 40px rgba(99, 102, 241, 0.1);
+        }
+
+        .price-amount { font-size: 3rem; font-weight: 700; margin: 20px 0; }
+        .price-amount span { font-size: 1rem; color: var(--text-muted); font-weight: 400; }
+
+        .check-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .check-icon { color: var(--primary); }
+
+        /* --- FOOTER --- */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 80px 0 40px;
+            background: #050914;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .footer-col h4 { color: white; margin-bottom: 20px; }
+        .footer-col ul li { margin-bottom: 12px; }
+        .footer-col ul li a { color: var(--text-muted); font-size: 0.9rem; }
+        .footer-col ul li a:hover { color: var(--primary); }
+
+        /* --- RESPONSIVE MEDIA QUERIES --- */
+        @media (max-width: 900px) {
+            .desktop-menu { display: none; }
+            .mobile-toggle { display: block; }
+            .hero-stats { flex-direction: column; gap: 20px; }
+        }
+
+        @media (max-width: 768px) {
+            .demo-grid { grid-template-columns: 1fr; }
+            .footer-grid { grid-template-columns: 1fr; gap: 40px; }
+            .hero { padding-top: 120px; }
+            .hero h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glow-bg"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-content">
+            <a href="#" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="url(#paint0_linear)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 17L12 22L22 17" stroke="url(#paint0_linear)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12L12 17L22 12" stroke="url(#paint0_linear)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="paint0_linear" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#6366F1"/>
+                            <stop offset="1" stop-color="#EC4899"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                NexusAI
+            </a>
+
+            <nav class="desktop-menu">
+                <a href="#features">Features</a>
+                <a href="#docs">Documentation</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#" class="btn btn-glass">Log In</a>
+                <a href="#" class="btn btn-primary">Get API Key</a>
+            </nav>
+
+            <button class="mobile-toggle" onclick="toggleMenu()">☰</button>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#features" onclick="toggleMenu()">Features</a>
+        <a href="#docs" onclick="toggleMenu()">Documentation</a>
+        <a href="#pricing" onclick="toggleMenu()">Pricing</a>
+        <a href="#" onclick="toggleMenu()" class="btn btn-primary" style="margin-top: 20px;">Get API Key</a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Build the future with <br><span class="text-gradient">Intelligent APIs</span></h1>
+            <p>The unified platform for LLMs, Vector Search, and Generative AI. Scale from prototype to production with a single endpoint.</p>
+            
+            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                <a href="#" class="btn btn-primary">Start Building Free</a>
+                <a href="#" class="btn btn-glass">Read Documentation</a>
+            </div>
+
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <h4>99.99%</h4>
+                    <p>Uptime SLA</p>
+                </div>
+                <div class="stat-item">
+                    <h4>&lt;50ms</h4>
+                    <p>Global Latency</p>
+                </div>
+                <div class="stat-item">
+                    <h4>10B+</h4>
+                    <p>Tokens Processed</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Demo Section -->
+    <section class="code-demo" id="docs">
+        <div class="container">
+            <div class="demo-grid">
+                <div class="demo-text">
+                    <div style="color: var(--primary); font-weight: 600; margin-bottom: 10px;">DEVELOPER FIRST</div>
+                    <h2>Integration in <br>minutes, not days.</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 30px;">
+                        Our SDKs handle rate limiting, retries, and streaming automatically. Choose your preferred language and copy-paste to get started.
+                    </p>
+                    <ul style="color: var(--text-muted); display: grid; gap: 10px;">
+                        <li>✓ Fully typed SDKs (Python, TS, Go)</li>
+                        <li>✓ Automatic Token Management</li>
+                        <li>✓ Streaming Support</li>
+                    </ul>
+                </div>
+
+                <div class="terminal-window">
+                    <div class="terminal-header">
+                        <div class="lang-tabs">
+                            <button class="lang-tab active" onclick="switchLang('python', this)">Python</button>
+                            <button class="lang-tab" onclick="switchLang('node', this)">Node.js</button>
+                            <button class="lang-tab" onclick="switchLang('curl', this)">cURL</button>
+                        </div>
+                        <button class="btn-glass" style="padding: 4px 12px; font-size: 0.75rem;" onclick="copyCode()">Copy</button>
+                    </div>
+                    <div class="terminal-body" id="code-display">
+                        <!-- Content injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Grid -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header" style="text-align: center; margin-bottom: 60px;">
+                <h2 style="font-size: 2.5rem; margin-bottom: 15px;">Everything you need</h2>
+                <p style="color: var(--text-muted);">A complete suite of AI tools for modern applications.</p>
+            </div>
+            
+            <div class="feature-grid">
+                <div class="glass-card">
+                    <div class="icon-box">🧠</div>
+                    <h3>LLM Orchestration</h3>
+                    <p style="color: var(--text-muted); margin-top: 10px;">Route requests to the best model automatically based on cost, latency, or complexity.</p>
+                </div>
+                <div class="glass-card">
+                    <div class="icon-box">🔍</div>
+                    <h3>Vector Search</h3>
+                    <p style="color: var(--text-muted); margin-top: 10px;">Store and query embeddings with millisecond latency. Perfect for RAG applications.</p>
+                </div>
+                <div class="glass-card">
+                    <div class="icon-box">🛡️</div>
+                    <h3>Guardrails</h3>
+                    <p style="color: var(--text-muted); margin-top: 10px;">Built-in content moderation and PII redaction to keep your app safe and compliant.</p>
+                </div>
+                <div class="glass-card">
+                    <div class="icon-box">⚡</div>
+                    <h3>Edge Caching</h3>
+                    <p style="color: var(--text-muted); margin-top: 10px;">Cache common prompts at the edge to reduce costs and improve response times.</p>
+                </div>
+                <div class="glass-card">
+                    <div class="icon-box">📊</div>
+                    <h3>Observability</h3>
+                    <p style="color: var(--text-muted); margin-top: 10px;">Trace every token, latency spike, and cost center in real-time dashboards.</p>
+                </div>
+                <div class="glass-card">
+                    <div class="icon-box">🔌</div>
+                    <h3>Function Calling</h3>
+                    <p style="color: var(--text-muted); margin-top: 10px;">Connect your LLMs to external APIs and databases with structured JSON output.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="section-header" style="text-align: center;">
+                <h2 style="font-size: 2.5rem;">Transparent Pricing</h2>
+                <p style="color: var(--text-muted);">Start for free, scale as you grow.</p>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Free Tier -->
+                <div class="price-card">
+                    <h3>Developer</h3>
+                    <div class="price-amount">$0<span>/mo</span></div>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Perfect for side projects.</p>
+                    <ul class="check-list" style="list-style: none; padding: 0;">
+                        <li><span class="check-icon">✓</span> 10k tokens / month</li>
+                        <li><span class="check-icon">✓</span> Standard Models</li>
+                        <li><span class="check-icon">✓</span> Community Support</li>
+                    </ul>
+                    <a href="#" class="btn btn-glass" style="width: 100%; margin-top: 30px;">Start Free</a>
+                </div>
+
+                <!-- Pro Tier -->
+                <div class="price-card popular">
+                    <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;">RECOMMENDED</div>
+                    <h3>Production</h3>
+                    <div class="price-amount">$49<span>/mo</span></div>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">For growing startups.</p>
+                    <ul class="check-list" style="list-style: none; padding: 0;">
+                        <li><span class="check-icon">✓</span> 5M tokens / month</li>
+                        <li><span class="check-icon">✓</span> Turbo Models</li>
+                        <li><span class="check-icon">✓</span> Vector Search (10k vectors)</li>
+                        <li><span class="check-icon">✓</span> Email Support</li>
+                    </ul>
+                    <a href="#" class="btn btn-primary" style="width: 100%; margin-top: 30px;">Get Started</a>
+                </div>
+
+                <!-- Enterprise Tier -->
+                <div class="price-card">
+                    <h3>Enterprise</h3>
+                    <div class="price-amount">Custom</div>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">For large scale needs.</p>
+                    <ul class="check-list" style="list-style: none; padding: 0;">
+                        <li><span class="check-icon">✓</span> Unlimited Tokens</li>
+                        <li><span class="check-icon">✓</span> Dedicated Infrastructure</li>
+                        <li><span class="check-icon">✓</span> SSO & Audit Logs</li>
+                        <li><span class="check-icon">✓</span> 24/7 Priority Support</li>
+                    </ul>
+                    <a href="#" class="btn btn-glass" style="width: 100%; margin-top: 30px;">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <a href="#" class="logo" style="margin-bottom: 20px;">NexusAI</a>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;">
+                        The AI infrastructure layer for the next generation of software. Built for developers, by developers.
+                    </p>
+                </div>
+                <div class="footer-col">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#">Models</a></li>
+                        <li><a href="#">Vector DB</a></li>
+                        <li><a href="#">Fine-tuning</a></li>
+                        <li><a href="#">Changelog</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">API Reference</a></li>
+                        <li><a href="#">Community</a></li>
+                        <li><a href="#">Status</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Legal</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div style="text-align: center; border-top: 1px solid var(--border); padding-top: 30px; color: var(--text-muted); font-size: 0.85rem;">
+                &copy; 2023 NexusAI Inc. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- Mobile Menu Logic ---
+        function toggleMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('active');
+        }
+
+        // --- Code Snippet Data ---
+        const codeSnippets = {
+            python: `
+<span class="c-p">import</span> nexus
+
+client = nexus.Client(api_key=<span class="c-g">"nx_..."</span>)
+
+response = client.chat.completions.create(
+    model=<span class="c-g">"nexus-v4"</span>,
+    messages=[{<span class="c-g">"role"</span>: <span class="c-g">"user"</span>, <span class="c-g">"content"</span>: <span class="c-g">"Hello world"</span>}],
+    stream=<span class="c-b">True</span>
+)
+
+<span class="c-p">for</span> chunk <span class="c-p">in</span> response:
+    print(chunk.choices[<span class="c-o">0</span>].delta.content)
+`,
+            node: `
+<span class="c-p">import</span> { Nexus } <span class="c-p">from</span> <span class="c-g">'nexus-ai'</span>;
+
+<span class="c-p">const</span> client = <span class="c-p">new</span> Nexus({ apiKey: <span class="c-g">"nx_..."</span> });
+
+<span class="c-p">const</span> stream = <span class="c-p">await</span> client.chat.completions.create({
+  model: <span class="c-g">"nexus-v4"</span>,
+  messages: [{ role: <span class="c-g">"user"</span>, content: <span class="c-g">"Hello world"</span> }],
+  stream: <span class="c-b">true</span>,
+});
+
+<span class="c-p">for await</span> (<span class="c-p">const</span> chunk <span class="c-p">of</span> stream) {
+  process.stdout.write(chunk.choices[<span class="c-o">0</span>].delta.content);
+}
+`,
+            curl: `
+curl https://api.nexus.ai/v1/chat/completions \\
+  -H <span class="c-g">"Content-Type: application/json"</span> \\
+  -H <span class="c-g">"Authorization: Bearer nx_..."</span> \\
+  -d '{
+    "model": "nexus-v4",
+    "messages": [{"role": "user", "content": "Hello world"}],
+    "stream": true
+  }'
+`
+        };
+
+        // --- Tab Switching Logic ---
+        function switchLang(lang, btnElement) {
+            // Update Tabs
+            document.querySelectorAll('.lang-tab').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            // Update Code Content
+            const display = document.getElementById('code-display');
+            display.innerHTML = `<pre><code>${codeSnippets[lang]}</code></pre>`;
+        }
+
+        // --- Copy Logic ---
+        function copyCode() {
+            const activeTab = document.querySelector('.lang-tab.active').innerText.toLowerCase();
+            // Remove HTML tags for copying raw text
+            const rawText = codeSnippets[activeTab].replace(/<[^>]*>?/gm, '');
+            
+            navigator.clipboard.writeText(rawText.trim()).then(() => {
+                const btn = document.querySelector('.terminal-header .btn-glass');
+                const originalText = btn.innerText;
+                btn.innerText = "Copied!";
+                setTimeout(() => btn.innerText = originalText, 2000);
+            });
+        }
+
+        // Initialize with Python
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstTab = document.querySelector('.lang-tab');
+            switchLang('python', firstTab);
+        });
+    </script>
+</body>
+</html>
+
