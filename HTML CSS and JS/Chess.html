@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple JS Chess</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #2c3e50;
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        #chessboard {
+            display: grid;
+            grid-template-columns: repeat(8, 60px);
+            grid-template-rows: repeat(8, 60px);
+            border: 5px solid #34495e;
+            user-select: none;
+        }
+
+        .square {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            cursor: pointer;
+        }
+
+        /* Chessboard Colors */
+        .white { background-color: #ecf0f1; }
+        .black { background-color: #95a5a6; }
+
+        .selected {
+            background-color: #f1c40f !important;
+        }
+
+        .square:hover {
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body>
+
+<div id="chessboard"></div>
+
+<script>
+    const boardElement = document.getElementById('chessboard');
+    
+    // Initial board layout using Unicode characters
+    const initialBoard = [
+        ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
+        ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['', '', '', '', '', '', '', ''],
+        ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
+        ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
+    ];
+
+    let selectedSquare = null;
+
+    function createBoard() {
+        boardElement.innerHTML = '';
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const square = document.createElement('div');
+                square.classList.add('square');
+                square.classList.add((r + c) % 2 === 0 ? 'white' : 'black');
+                square.dataset.row = r;
+                square.dataset.col = c;
+                square.innerText = initialBoard[r][c];
+                
+                square.addEventListener('click', () => handleSquareClick(r, c));
+                boardElement.appendChild(square);
+            }
+        }
+    }
+
+    function handleSquareClick(r, c) {
+        const piece = initialBoard[r][c];
+
+        if (selectedSquare) {
+            // Move piece to new location
+            const prevR = selectedSquare.r;
+            const prevC = selectedSquare.c;
+
+            if (prevR === r && prevC === c) {
+                // Deselect if clicking the same square
+                selectedSquare = null;
+            } else {
+                // Execute move
+                initialBoard[r][c] = initialBoard[prevR][prevC];
+                initialBoard[prevR][prevC] = '';
+                selectedSquare = null;
+            }
+            createBoard();
+        } else {
+            // Select a piece if the square isn't empty
+            if (piece !== '') {
+                selectedSquare = { r, c };
+                createBoard();
+                // Highlight selected square
+                const index = r * 8 + c;
+                boardElement.children[index].classList.add('selected');
+            }
+        }
+    }
+
+    createBoard();
+</script>
+
+</body>
+</html>
