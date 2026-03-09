@@ -2,120 +2,163 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple JS Chess</title>
+    <title>Advanced Chess Logic</title>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #2c3e50;
-            margin: 0;
-            font-family: sans-serif;
+        :root {
+            --light-sq: #dee3e6;
+            --dark-sq: #8ca2ad;
+            --highlight: rgba(241, 196, 15, 0.6);
+            --valid-move: rgba(46, 204, 113, 0.4);
         }
 
-        #chessboard {
+        body { 
+            display: flex; flex-direction: column; align-items: center; 
+            background: #1a1a1a; color: white; font-family: 'Segoe UI', sans-serif; 
+        }
+
+        .status { margin: 20px; font-size: 1.5rem; font-weight: bold; }
+
+        #board {
             display: grid;
-            grid-template-columns: repeat(8, 60px);
-            grid-template-rows: repeat(8, 60px);
-            border: 5px solid #34495e;
-            user-select: none;
+            grid-template-columns: repeat(8, 70px);
+            grid-template-rows: repeat(8, 70px);
+            border: 8px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        .square {
-            width: 60px;
-            height: 60px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 40px;
-            cursor: pointer;
+        .sq {
+            width: 70px; height: 70px; display: flex;
+            justify-content: center; align-items: center;
+            font-size: 45px; cursor: pointer; position: relative;
         }
 
-        /* Chessboard Colors */
-        .white { background-color: #ecf0f1; }
-        .black { background-color: #95a5a6; }
-
-        .selected {
-            background-color: #f1c40f !important;
+        .white { background: var(--light-sq); }
+        .black { background: var(--dark-sq); }
+        
+        .selected { background: var(--highlight) !important; }
+        .hint::after {
+            content: ''; width: 20px; height: 20px;
+            background: var(--valid-move); border-radius: 50%;
+            position: absolute;
         }
 
-        .square:hover {
-            filter: brightness(1.1);
-        }
+        /* Prevent text selection */
+        .sq { user-select: none; -webkit-user-select: none; }
     </style>
 </head>
 <body>
 
-<div id="chessboard"></div>
+    <div class="status" id="status">White's Turn</div>
+    <div id="board"></div>
 
 <script>
-    const boardElement = document.getElementById('chessboard');
-    
-    // Initial board layout using Unicode characters
-    const initialBoard = [
-        ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'],
-        ['♟', '♟', '♟', '♟', '♟', '♟', '♟', '♟'],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['', '', '', '', '', '', '', ''],
-        ['♙', '♙', '♙', '♙', '♙', '♙', '♙', '♙'],
-        ['♖', '♘', '♗', '♕', '♔', '♗', '♘', '♖']
-    ];
+class ChessGame {
+    constructor() {
+        this.board = [
+            ['r','n','b','q','k','b','n','r'],
+            ['p','p','p','p','p','p','p','p'],
+            ['','','','','','','',''],
+            ['','','','','','','',''],
+            ['','','','','','','',''],
+            ['','','','','','','',''],
+            ['P','P','P','P','P','P','P','P'],
+            ['R','N','B','Q','K','B','N','R']
+        ];
+        this.turn = 'white'; // White is uppercase, Black is lowercase
+        this.selected = null;
+        this.validMoves = [];
+        
+        this.pieces = {
+            'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚', 'p': '♟',
+            'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔', 'P': '♙'
+        };
 
-    let selectedSquare = null;
+        this.init();
+    }
 
-    function createBoard() {
-        boardElement.innerHTML = '';
+    init() {
+        this.render();
+        document.getElementById('board').addEventListener('click', (e) => {
+            const sq = e.target.closest('.sq');
+            if (sq) this.handleSquareClick(parseInt(sq.dataset.r), parseInt(sq.dataset.c));
+        });
+    }
+
+    render() {
+        const boardEl = document.getElementById('board');
+        boardEl.innerHTML = '';
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
-                const square = document.createElement('div');
-                square.classList.add('square');
-                square.classList.add((r + c) % 2 === 0 ? 'white' : 'black');
-                square.dataset.row = r;
-                square.dataset.col = c;
-                square.innerText = initialBoard[r][c];
+                const div = document.createElement('div');
+                div.className = `sq ${(r + c) % 2 === 0 ? 'white' : 'black'}`;
+                div.dataset.r = r; div.dataset.c = c;
                 
-                square.addEventListener('click', () => handleSquareClick(r, c));
-                boardElement.appendChild(square);
+                if (this.selected?.r === r && this.selected?.c === c) div.classList.add('selected');
+                if (this.validMoves.some(m => m.r === r && m.c === c)) div.classList.add('hint');
+
+                div.innerText = this.pieces[this.board[r][c]] || '';
+                boardEl.appendChild(div);
             }
+        }
+        document.getElementById('status').innerText = `${this.turn.charAt(0).toUpperCase() + this.turn.slice(1)}'s Turn`;
+    }
+
+    handleSquareClick(r, c) {
+        const piece = this.board[r][c];
+        const isWhite = piece === piece.toUpperCase() && piece !== '';
+        const isBlack = piece === piece.toLowerCase() && piece !== '';
+
+        // 1. Selecting a piece
+        if ((this.turn === 'white' && isWhite) || (this.turn === 'black' && isBlack)) {
+            this.selected = { r, c };
+            this.calculateValidMoves(r, c, piece);
+            this.render();
+            return;
+        }
+
+        // 2. Moving a piece
+        if (this.selected && this.validMoves.some(m => m.r === r && m.c === c)) {
+            this.board[r][c] = this.board[this.selected.r][this.selected.c];
+            this.board[this.selected.r][this.selected.c] = '';
+            this.turn = this.turn === 'white' ? 'black' : 'white';
+            this.selected = null;
+            this.validMoves = [];
+            this.render();
         }
     }
 
-    function handleSquareClick(r, c) {
-        const piece = initialBoard[r][c];
+    calculateValidMoves(r, c, piece) {
+        this.validMoves = [];
+        const type = piece.toLowerCase();
 
-        if (selectedSquare) {
-            // Move piece to new location
-            const prevR = selectedSquare.r;
-            const prevC = selectedSquare.c;
-
-            if (prevR === r && prevC === c) {
-                // Deselect if clicking the same square
-                selectedSquare = null;
-            } else {
-                // Execute move
-                initialBoard[r][c] = initialBoard[prevR][prevC];
-                initialBoard[prevR][prevC] = '';
-                selectedSquare = null;
-            }
-            createBoard();
-        } else {
-            // Select a piece if the square isn't empty
-            if (piece !== '') {
-                selectedSquare = { r, c };
-                createBoard();
-                // Highlight selected square
-                const index = r * 8 + c;
-                boardElement.children[index].classList.add('selected');
+        // Simple Pawn Logic
+        if (type === 'p') {
+            const dir = piece === 'P' ? -1 : 1;
+            if (this.board[r + dir] && this.board[r + dir][c] === '') {
+                this.validMoves.push({ r: r + dir, c });
             }
         }
+        
+        // Simple Knight Logic (L-shapes)
+        if (type === 'n') {
+            const jumps = [[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]];
+            jumps.forEach(([dr, dc]) => {
+                const nr = r + dr, nc = c + dc;
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8) {
+                    const target = this.board[nr][nc];
+                    // Can move if empty or opponent piece
+                    if (target === '' || (piece === 'N' ? target === target.toLowerCase() : target === target.toUpperCase())) {
+                        this.validMoves.push({ r: nr, c: nc });
+                    }
+                }
+            });
+        }
+        // ... (Other pieces would follow similar logic)
     }
+}
 
-    createBoard();
+new ChessGame();
 </script>
-
 </body>
 </html>
+
