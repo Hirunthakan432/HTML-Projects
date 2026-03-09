@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VitalPulse | Advanced Health Tracker</title>
+    <title>VitalPulse Pro | Data-Driven Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -14,37 +14,32 @@
 <body class="bg-slate-50 text-slate-900">
 
     <nav class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-10">
-        <h1 class="text-2xl font-bold text-indigo-600 tracking-tight">VitalPulse</h1>
-        <div class="space-x-4">
-            <span class="text-sm font-medium text-slate-500">Welcome back, User</span>
-            <button class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-700 transition">Sync Device</button>
-        </div>
+        <h1 class="text-2xl font-bold text-indigo-600 tracking-tight">VitalPulse <span class="text-slate-400 font-light text-sm italic">LocalSave™</span></h1>
+        <button onclick="clearData()" class="text-xs text-red-500 hover:underline">Reset All Data</button>
     </nav>
 
     <main class="max-w-7xl mx-auto p-6 space-y-8">
         
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <p class="text-slate-500 text-sm font-medium uppercase">Daily Steps</p>
-                <h2 class="text-3xl font-bold mt-1">8,432</h2>
-                <div class="mt-4 w-full bg-slate-100 rounded-full h-2">
-                    <div class="bg-indigo-500 h-2 rounded-full" style="width: 84%"></div>
-                </div>
+                <p class="text-slate-500 text-sm font-medium uppercase">Last Step Count</p>
+                <h2 id="stepDisplay" class="text-3xl font-bold mt-1">0</h2>
+                <p class="text-slate-400 text-xs mt-2">Daily Goal: 10,000</p>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <p class="text-slate-500 text-sm font-medium uppercase">Sleep Quality</p>
-                <h2 class="text-3xl font-bold mt-1">7h 20m</h2>
-                <p class="text-green-500 text-xs font-bold mt-2">↑ 12% from last night</p>
+                <p class="text-slate-500 text-sm font-medium uppercase">Avg Sleep</p>
+                <h2 id="sleepDisplay" class="text-3xl font-bold mt-1">0h</h2>
+                <p class="text-indigo-500 text-xs font-bold mt-2 italic">Based on history</p>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <p class="text-slate-500 text-sm font-medium uppercase">Hydration</p>
-                <h2 class="text-3xl font-bold mt-1">1.8 <span class="text-lg font-normal">L</span></h2>
-                <p class="text-slate-400 text-xs mt-2">Goal: 2.5 L</p>
+                <p class="text-slate-500 text-sm font-medium uppercase">Total Water</p>
+                <h2 id="waterDisplay" class="text-3xl font-bold mt-1">0 <span class="text-lg font-normal">L</span></h2>
+                <p class="text-slate-400 text-xs mt-2">Cumulative</p>
             </div>
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <p class="text-slate-500 text-sm font-medium uppercase">Avg Heart Rate</p>
-                <h2 class="text-3xl font-bold mt-1">68 <span class="text-lg font-normal">BPM</span></h2>
-                <p class="text-indigo-400 text-xs mt-2 italic">Resting state</p>
+                <p class="text-slate-500 text-sm font-medium uppercase">Latest BPM</p>
+                <h2 id="bpmDisplay" class="text-3xl font-bold mt-1">--</h2>
+                <p class="text-red-400 text-xs mt-2">Heart Rate</p>
             </div>
         </section>
 
@@ -54,72 +49,113 @@
                 <form id="healthForm" class="space-y-4">
                     <div>
                         <label class="block text-sm font-semibold mb-1">Metric Type</label>
-                        <select class="w-full border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <option>Daily Steps</option>
-                            <option>Weight (kg)</option>
-                            <option>Calorie Intake</option>
-                            <option>Sleep Duration</option>
+                        <select id="metricType" class="w-full border border-slate-200 rounded-lg p-2 focus:ring-2 focus:indigo-500 outline-none">
+                            <option value="steps">Steps Walked</option>
+                            <option value="sleep">Sleep (Hours)</option>
+                            <option value="water">Water (Liters)</option>
+                            <option value="bpm">Heart Rate (BPM)</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-1">Value</label>
-                        <input type="number" placeholder="Enter number..." class="w-full border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <input type="number" id="metricValue" step="0.1" required placeholder="Enter value..." class="w-full border border-slate-200 rounded-lg p-2 focus:ring-2 focus:indigo-500 outline-none">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold mb-1">Date</label>
-                        <input type="date" class="w-full border border-slate-200 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <input type="date" id="metricDate" required class="w-full border border-slate-200 rounded-lg p-2 focus:ring-2 focus:indigo-500 outline-none">
                     </div>
-                    <button type="button" class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-slate-800 transition mt-4">Add Entry</button>
+                    <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition mt-4 shadow-lg shadow-indigo-200">Save Record</button>
                 </form>
             </section>
 
             <section class="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold">Activity Overview</h3>
-                    <select class="text-sm border-none bg-slate-50 rounded-md p-1 font-medium">
-                        <option>Last 7 Days</option>
-                        <option>Last 30 Days</option>
-                    </select>
-                </div>
+                <h3 class="text-xl font-bold mb-6">Step History (Last 7 Entries)</h3>
                 <div class="h-64">
                     <canvas id="activityChart"></canvas>
                 </div>
             </section>
         </div>
-
     </main>
 
     <script>
-        // Chart Configuration
-        const ctx = document.getElementById('activityChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                datasets: [{
-                    label: 'Steps Walked',
-                    data: [6500, 8200, 7800, 9500, 8432, 11000, 9000],
-                    borderColor: '#4f46e5',
-                    backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointRadius: 4,
-                    pointBackgroundColor: '#4f46e5'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+        // --- DATA LOGIC ---
+        let healthData = JSON.parse(localStorage.getItem('vitalPulseData')) || [];
+
+        const form = document.getElementById('healthForm');
+        const activityCtx = document.getElementById('activityChart').getContext('2d');
+        let myChart;
+
+        // Initialize Chart
+        function initChart() {
+            const stepEntries = healthData.filter(d => d.type === 'steps').slice(-7);
+            const labels = stepEntries.map(d => d.date);
+            const values = stepEntries.map(d => d.value);
+
+            myChart = new Chart(activityCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Steps',
+                        data: values,
+                        borderColor: '#4f46e5',
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)'
+                    }]
                 },
-                scales: {
-                    y: { beginAtZero: true, grid: { display: false } },
-                    x: { grid: { display: false } }
-                }
-            }
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function updateUI() {
+            // Update Metric Displays
+            const steps = healthData.filter(d => d.type === 'steps');
+            const sleep = healthData.filter(d => d.type === 'sleep');
+            const water = healthData.filter(d => d.type === 'water');
+            const bpm = healthData.filter(d => d.type === 'bpm');
+
+            document.getElementById('stepDisplay').innerText = steps.length ? steps[steps.length-1].value.toLocaleString() : '0';
+            
+            const avgSleep = sleep.reduce((acc, curr) => acc + parseFloat(curr.value), 0) / (sleep.length || 1);
+            document.getElementById('sleepDisplay').innerText = sleep.length ? avgSleep.toFixed(1) + 'h' : '0h';
+            
+            const totalWater = water.reduce((acc, curr) => acc + parseFloat(curr.value), 0);
+            document.getElementById('waterDisplay').innerText = totalWater.toFixed(1) + ' L';
+            
+            document.getElementById('bpmDisplay').innerText = bpm.length ? bpm[bpm.length-1].value : '--';
+
+            // Update Chart
+            const stepEntries = healthData.filter(d => d.type === 'steps').slice(-7);
+            myChart.data.labels = stepEntries.map(d => d.date);
+            myChart.data.datasets[0].data = stepEntries.map(d => d.value);
+            myChart.update();
+        }
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newEntry = {
+                type: document.getElementById('metricType').value,
+                value: document.getElementById('metricValue').value,
+                date: document.getElementById('metricDate').value
+            };
+
+            healthData.push(newEntry);
+            localStorage.setItem('vitalPulseData', JSON.stringify(healthData));
+            updateUI();
+            form.reset();
         });
+
+        function clearData() {
+            if(confirm("Delete all health history?")) {
+                localStorage.removeItem('vitalPulseData');
+                location.reload();
+            }
+        }
+
+        // Run on load
+        initChart();
+        updateUI();
     </script>
 </body>
 </html>
