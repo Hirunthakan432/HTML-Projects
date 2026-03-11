@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Interactive Chess</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chess.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            overflow-x: hidden;
+        }
+
+        /* 3D Board Presentation */
+        .board-container {
+            perspective: 1000px;
+            transform-style: preserve-3d;
+        }
+
+        .board {
+            width: 100%;
+            padding-bottom: 100%; /* Aspect ratio 1:1 */
+            position: relative;
+            background-color: #334155;
+            border-radius: 8px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 4px #475569;
+            transform: rotateX(5deg);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .board:hover {
+            transform: rotateX(2deg);
+        }
+
+        /* Squares */
+        .square {
+            position: absolute;
+            width: 12.5%;
+            height: 12.5%;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+        
+        .square-light { background-color: #e2e8f0; }
+        .square-dark { background-color: #64748b; }
+
+        /* Animation Layers */
+        .piece {
+            position: absolute;
+            width: 12.5%;
+            height: 12.5%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through to the square */
+            transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease, filter 0.3s ease;
+            will-change: transform;
+        }
+
+        .piece i {
+            font-size: 2.2rem;
+            filter: drop-shadow(0 4px 3px rgba(0, 0, 0, 0.4));
+            transition: transform 0.2s ease;
+        }
+        
+        @media (min-width: 640px) { .piece i { font-size: 3.5rem; } }
+
+        .piece.w i { color: #ffffff; }
+        .piece.b i { color: #0f172a; filter: drop-shadow(0 2px 1px rgba(255, 255, 255, 0.2)); }
+
+        .piece.captured {
+            transform: scale(0) rotate(45deg) !important;
+            opacity: 0;
+            filter: blur(4px);
+        }
+
+        /* Interactive Highlights */
+        .highlight-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .highlight {
+            position: absolute;
+            width: 12.5%; height: 12.5%;
+            transition: all 0.2s ease;
+        }
+
+        .highlight.selected {
+            background-color: rgba(250, 204, 21, 0.6);
+            box-shadow: inset 0 0 20px rgba(250, 204, 21, 0.4);
+        }
+        
+        .highlight.last-move {
+            background-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .highlight.check {
+            background: radial-gradient(circle, rgba(239, 68, 68, 0.8) 0%, rgba(239, 68, 68, 0) 70%);
+            animation: pulse-check 1.5s infinite;
+        }
+
+        .highlight.move-dot::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 25%; height: 25%;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+            animation: pop-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .highlight.move-capture::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%; height: 80%;
+            border: 6px solid rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+            animation: pop-in 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes pop-in {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse-check {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+
+        /* UI Elements */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #menu-overlay {
+            transition: opacity 0.4s ease, backdrop-filter 0.4s ease;
+        }
+        .hidden-menu {
+            opacity: 0;
+            pointer-events: none;
+            backdrop-filter: blur(0px);
+        }
+        
+        .thinking-indicator {
+            display: inline-block;
+            width: 8px; height: 8px;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .thinking-indicator:nth-child(1) { animation-delay: -0.32s; }
+        .thinking-indicator:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col items-center justify-center p-2 sm:p-6 selection:bg-none">
+
+    <!-- Game Container -->
+    <div class="w-full max-w-3xl flex flex-col items-center relative z-10">
+        
+        <!-- Header Info -->
+        <div class="w-full max-w-[600px] flex justify-between items-center mb-4 px-2">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                    <i class="fa-solid fa-chess-knight text-cyan-400 mr-2"></i>Nexus Chess
+                </h1>
+                <div id="game-status" class="text-lg font-medium text-slate-300 mt-1 h-7 flex items-center">
+                    Select a game mode to begin
+                </div>
+            </div>
+            
+            <button onclick="showMenu()" class="glass-panel hover:bg-slate-700 text-white p-3 rounded-xl transition-all shadow-lg active:scale-95 group">
+                <i class="fa-solid fa-bars text-xl group-hover:rotate-90 transition-transform"></i>
+            </button>
+        </div>
+
+        <!-- The Chess Board -->
+        <div class="board-container w-full max-w-[600px]">
+            <div class="board" id="board-wrap">
+                <!-- Squares rendering -->
+                <div id="squares-layer" class="absolute inset-0"></div>
+                <!-- Highlights rendering -->
+                <div id="highlights-layer" class="highlight-layer"></div>
+                <!-- Pieces rendering -->
+                <div id="pieces-layer" class="absolute inset-0 pointer-events-none overflow-hidden rounded-lg"></div>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- Main Menu Overlay -->
+    <div id="menu-overlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="glass-panel p-8 rounded-2xl shadow-2xl max-w-md w-full text-center border border-slate-700 transform transition-all scale-100 opacity-100" id="menu-modal">
+            <h2 class="text-3xl font-bold mb-6 text-white"><i class="fa-solid fa-gamepad mr-2 text-indigo-400"></i>New Game</h2>
+            
+            <div class="space-y-4">
+                <button onclick="startGame('pvp')" class="w-full py-4 px-6 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold text-lg transition-all flex items-center justify-between group">
+                    <span><i class="fa-solid fa-user-friends mr-3 text-emerald-400"></i>Player vs Player</span>
+                    <i class="fa-solid fa-chevron-right opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </button>
+                
+                <button onclick="startGame('pvc', 'w')" class="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-500 rounded-xl font-semibold text-lg transition-all flex items-center justify-between group shadow-lg shadow-indigo-900/50">
+                    <span><i class="fa-solid fa-robot mr-3 text-cyan-300"></i>Play vs AI (White)</span>
+                    <i class="fa-solid fa-chevron-right opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </button>
+
+                <button onclick="startGame('pvc', 'b')" class="w-full py-4 px-6 bg-slate-800 hover:bg-slate-700 rounded-xl font-semibold text-lg transition-all flex items-center justify-between group border border-slate-600">
+                    <span><i class="fa-solid fa-robot mr-3 text-rose-400"></i>Play vs AI (Black)</span>
+                    <i class="fa-solid fa-chevron-right opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                </button>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-slate-700">
+                <label class="flex items-center justify-center space-x-3 cursor-pointer group">
+                    <span class="text-slate-400 group-hover:text-slate-200 transition-colors">AI Difficulty:</span>
+                    <select id="ai-depth" class="bg-slate-800 text-white border border-slate-600 rounded-lg px-3 py-1 outline-none focus:border-indigo-500">
+                        <option value="2">Easy</option>
+                        <option value="3" selected>Medium</option>
+                        <option value="4">Hard (Slower)</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Core Variables ---
+        const game = new Chess();
+        const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+        const pieceIconMap = { 'p': 'fa-chess-pawn', 'n': 'fa-chess-knight', 'b': 'fa-chess-bishop', 'r': 'fa-chess-rook', 'q': 'fa-chess-queen', 'k': 'fa-chess-king' };
+        
+        // DOM Elements
+        const squaresLayer = document.getElementById('squares-layer');
+        const piecesLayer = document.getElementById('pieces-layer');
+        const highlightsLayer = document.getElementById('highlights-layer');
+        const statusEl = document.getElementById('game-status');
+        const menuOverlay = document.getElementById('menu-overlay');
+        const aiDepthSelect = document.getElementById('ai-depth');
+
+        // State
+        let currentMode = 'pvp'; // 'pvp', 'pvc'
+        let playerColor = 'w';   // 'w', 'b' (relevant for pvc)
+        let isAITurn = false;
+        let selectedSquare = null;
+        let validMoves = [];
+        let lastMove = null;
+        let pieceElements = {}; // Tracks DOM elements: pieceElements['e2'] = HTMLElement
+
+        // --- Initialization ---
+        function initBoard() {
+            squaresLayer.innerHTML = '';
+            highlightsLayer.innerHTML = '';
+            piecesLayer.innerHTML = '';
+            pieceElements = {};
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const file = files[col];
+                    const rank = 8 - row;
+                    const squareId = file + rank;
+                    const isLight = (row + col) % 2 === 0;
+
+                    // 1. Create Base Square
+                    const squareEl = document.createElement('div');
+                    squareEl.className = `square cursor-pointer ${isLight ? 'square-light' : 'square-dark'}`;
+                    squareEl.style.left = `${col * 12.5}%`;
+                    squareEl.style.top = `${row * 12.5}%`;
+                    squareEl.onclick = () => handleSquareClick(squareId);
+                    
+                    // Coordinates (only on edges)
+                    if (row === 7) {
+                        const fLabel = document.createElement('div');
+                        fLabel.className = `absolute bottom-0 right-1 text-[10px] font-bold ${isLight ? 'text-[#64748b]' : 'text-[#e2e8f0]'}`;
+                        fLabel.innerText = file;
+                        squareEl.appendChild(fLabel);
+                    }
+                    if (col === 0) {
+                        const rLabel = document.createElement('div');
+                        rLabel.className = `absolute top-0 left-1 text-[10px] font-bold ${isLight ? 'text-[#64748b]' : 'text-[#e2e8f0]'}`;
+                        rLabel.innerText = rank;
+                        squareEl.appendChild(rLabel);
+                    }
+                    squaresLayer.appendChild(squareEl);
+
+                    // 2. Initial Pieces setup
+                    const piece = game.get(squareId);
+                    if (piece) {
+                        createPieceDOM(piece, squareId, col, row);
+                    }
+                }
+            }
+        }
+
+        function createPieceDOM(piece, squareId, col, row) {
+            const pieceEl = document.createElement('div');
+            pieceEl.className = `piece ${piece.color}`;
+            pieceEl.id = `piece-${squareId}`;
+            pieceEl.style.transform = `translate(${col * 100}%, ${row * 100}%)`;
+            
+            const icon = document.createElement('i');
+            icon.className = `fa-solid ${pieceIconMap[piece.type]}`;
+            pieceEl.appendChild(icon);
+            
+            piecesLayer.appendChild(pieceEl);
+            pieceElements[squareId] = pieceEl;
+        }
+
+        // --- Rendering & Animations ---
+        
+        function updateHighlights() {
+            highlightsLayer.innerHTML = '';
+
+            // Last move highlights
+            if (lastMove) {
+                addHighlight(lastMove.from, 'last-move');
+                addHighlight(lastMove.to, 'last-move');
+            }
+
+            // Selected piece highlight
+            if (selectedSquare) {
+                addHighlight(selectedSquare, 'selected');
+            }
+
+            // King in check highlight
+            if (game.in_check()) {
+                const board = game.board();
+                for(let r=0; r<8; r++){
+                    for(let c=0; c<8; c++){
+                        if(board[r][c] && board[r][c].type === 'k' && board[r][c].color === game.turn()) {
+                            addHighlight(files[c] + (8-r), 'check');
+                        }
+                    }
+                }
+            }
+
+            // Valid moves highlights
+            validMoves.forEach(m => {
+                // Determine if move is a capture
+                const isCapture = m.flags.includes('c') || m.flags.includes('e');
+                addHighlight(m.to, isCapture ? 'move-capture' : 'move-dot');
+            });
+        }
+
+        function addHighlight(squareId, className) {
+            const col = files.indexOf(squareId.charAt(0));
+            const row = 8 - parseInt(squareId.charAt(1));
+            const el = document.createElement('div');
+            el.className = `highlight ${className}`;
+            el.style.left = `${col * 12.5}%`;
+            el.style.top = `${row * 12.5}%`;
+            highlightsLayer.appendChild(el);
+        }
+
+        function animateMove(move) {
+            const fromEl = pieceElements[move.from];
+            const toCol = files.indexOf(move.to.charAt(0));
+            const toRow = 8 - parseInt(move.to.charAt(1));
+
+            // Handle Captures (including En Passant)
+            let captureSquare = move.to;
+            if (move.flags.includes('e')) {
+                // En passant: captured pawn is behind the destination square
+                const rankDir = move.color === 'w' ? -1 : 1;
+                captureSquare = move.to.charAt(0) + (parseInt(move.to.charAt(1)) + rankDir);
+            }
+            
+            if (pieceElements[captureSquare] && captureSquare !== move.from) {
+                const capturedEl = pieceElements[captureSquare];
+                capturedEl.classList.add('captured');
+                setTimeout(() => capturedEl.remove(), 300); // Wait for CSS transition
+                delete pieceElements[captureSquare];
+            }
+
+            // Move the main piece
+            if (fromEl) {
+                fromEl.style.transform = `translate(${toCol * 100}%, ${toRow * 100}%)`;
+                fromEl.id = `piece-${move.to}`;
+                pieceElements[move.to] = fromEl;
+                delete pieceElements[move.from];
+
+                // Handle Promotion visually
+                if (move.flags.includes('p') || move.flags.includes('cp')) {
+                    setTimeout(() => {
+                        fromEl.querySelector('i').className = `fa-solid ${pieceIconMap[move.promotion || 'q']}`;
+                    }, 150);
+                }
+            }
+
+            // Handle Castling (move the rook)
+            if (move.flags.includes('k') || move.flags.includes('q')) {
+                let rookFrom, rookTo;
+                const rank = move.color === 'w' ? '1' : '8';
+                if (move.flags.includes('k')) { rookFrom = 'h'+rank; rookTo = 'f'+rank; }
+                else { rookFrom = 'a'+rank; rookTo = 'd'+rank; }
+                
+                const rookEl = pieceElements[rookFrom];
+                if(rookEl) {
+                    const rCol = files.indexOf(rookTo.charAt(0));
+                    const rRow = 8 - parseInt(rookTo.charAt(1));
+                    rookEl.style.transform = `translate(${rCol * 100}%, ${rRow * 100}%)`;
+                    rookEl.id = `piece-${rookTo}`;
+                    pieceElements[rookTo] = rookEl;
+                    delete pieceElements[rookFrom];
+                }
+            }
+        }
+
+        // --- Interaction Logic ---
+
+        function handleSquareClick(squareId) {
+            if (game.game_over() || isAITurn) return;
+
+            const piece = game.get(squareId);
+            const turn = game.turn();
+
+            // Click on a valid move destination
+            if (selectedSquare && validMoves.some(m => m.to === squareId)) {
+                executeMove(selectedSquare, squareId);
+                return;
+            }
+
+            // Click on own piece
+            if (piece && piece.color === turn) {
+                if (selectedSquare === squareId) {
+                    selectedSquare = null;
+                    validMoves = [];
+                } else {
+                    selectedSquare = squareId;
+                    validMoves = game.moves({ square: squareId, verbose: true });
+                }
+            } else {
+                selectedSquare = null;
+                validMoves = [];
+            }
+
+            updateHighlights();
+        }
+
+        function executeMove(from, to, promotion = 'q') {
+            const moveData = { from, to, promotion };
+            
+            // Validate and apply in game engine
+            const move = game.move(moveData);
+            if (!move) return false;
+
+            // Update UI
+            selectedSquare = null;
+            validMoves = [];
+            lastMove = move;
+            
+            animateMove(move);
+            updateHighlights();
+            updateStatus();
+
+            // Check AI Turn
+            if (!game.game_over() && currentMode === 'pvc' && game.turn() !== playerColor) {
+                isAITurn = true;
+                statusEl.innerHTML = `<span class="text-indigo-400">AI is thinking <div class="thinking-indicator ml-1"></div><div class="thinking-indicator"></div><div class="thinking-indicator"></div></span>`;
+                // Small delay to allow CSS animations and DOM to update before heavy calculation
+                setTimeout(makeAIMove, 400); 
+            }
+
+            return true;
+        }
+
+        function updateStatus() {
+            let html = '';
+            const isWhiteTurn = game.turn() === 'w';
+            const turnText = isWhiteTurn ? 'White to move' : 'Black to move';
+            
+            if (game.in_checkmate()) {
+                html = `<span class="text-rose-500 font-bold"><i class="fa-solid fa-skull mr-2"></i>Checkmate! ${isWhiteTurn ? 'Black' : 'White'} wins.</span>`;
+            } else if (game.in_draw() || game.in_stalemate() || game.in_threefold_repetition()) {
+                html = `<span class="text-amber-400 font-bold"><i class="fa-solid fa-handshake mr-2"></i>Game ended in a draw.</span>`;
+            } else if (game.in_check()) {
+                html = `<span class="text-rose-400 font-bold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Check!</span> <span class="ml-2">${turnText}</span>`;
+            } else {
+                html = `<span class="text-slate-300">${turnText}</span>`;
+            }
+            statusEl.innerHTML = html;
+        }
+
+        // --- Menu & Game Control ---
+
+        function showMenu() {
+            menuOverlay.classList.remove('hidden-menu');
+        }
+
+        function startGame(mode, pColor = 'w') {
+            currentMode = mode;
+            playerColor = pColor;
+            
+            // Hide Menu
+            menuOverlay.classList.add('hidden-menu');
+            
+            // Reset Game
+            game.reset();
+            selectedSquare = null;
+            validMoves = [];
+            lastMove = null;
+            isAITurn = false;
+            
+            initBoard();
+            updateHighlights();
+            updateStatus();
+
+            // If AI plays White, trigger AI move immediately
+            if (currentMode === 'pvc' && playerColor === 'b') {
+                isAITurn = true;
+                statusEl.innerHTML = `<span class="text-indigo-400">AI is thinking <div class="thinking-indicator ml-1"></div><div class="thinking-indicator"></div><div class="thinking-indicator"></div></span>`;
+                setTimeout(makeAIMove, 500);
+            }
+        }
+
+
+        // ==========================================
+        //  CHESS AI (Minimax with Alpha-Beta Pruning)
+        // ==========================================
+
+        // Piece Values
+        const PIECE_VALUES = { 'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000 };
+
+        // Piece-Square Tables (Evaluating positional strength)
+        const PST = {
+            'p': [
+                [ 0,  0,  0,  0,  0,  0,  0,  0],
+                [50, 50, 50, 50, 50, 50, 50, 50],
+                [10, 10, 20, 30, 30, 20, 10, 10],
+                [ 5,  5, 10, 25, 25, 10,  5,  5],
+                [ 0,  0,  0, 20, 20,  0,  0,  0],
+                [ 5, -5,-10,  0,  0,-10, -5,  5],
+                [ 5, 10, 10,-20,-20, 10, 10,  5],
+                [ 0,  0,  0,  0,  0,  0,  0,  0]
+            ],
+            'n': [
+                [-50,-40,-30,-30,-30,-30,-40,-50],
+                [-40,-20,  0,  0,  0,  0,-20,-40],
+                [-30,  0, 10, 15, 15, 10,  0,-30],
+                [-30,  5, 15, 20, 20, 15,  5,-30],
+                [-30,  0, 15, 20, 20, 15,  0,-30],
+                [-30,  5, 10, 15, 15, 10,  5,-30],
+                [-40,-20,  0,  5,  5,  0,-20,-40],
+                [-50,-40,-30,-30,-30,-30,-40,-50]
+            ],
+            'b': [
+                [-20,-10,-10,-10,-10,-10,-10,-20],
+                [-10,  0,  0,  0,  0,  0,  0,-10],
+                [-10,  0,  5, 10, 10,  5,  0,-10],
+                [-10,  5,  5, 10, 10,  5,  5,-10],
+                [-10,  0, 10, 10, 10, 10,  0,-10],
+                [-10, 10, 10, 10, 10, 10, 10,-10],
+                [-10,  5,  0,  0,  0,  0,  5,-10],
+                [-20,-10,-10,-10,-10,-10,-10,-20]
+            ],
+            'r': [
+                [  0,  0,  0,  0,  0,  0,  0,  0],
+                [  5, 10, 10, 10, 10, 10, 10,  5],
+                [ -5,  0,  0,  0,  0,  0,  0, -5],
+                [ -5,  0,  0,  0,  0,  0,  0, -5],
+                [ -5,  0,  0,  0,  0,  0,  0, -5],
+                [ -5,  0,  0,  0,  0,  0,  0, -5],
+                [ -5,  0,  0,  0,  0,  0,  0, -5],
+                [  0,  0,  0,  5,  5,  0,  0,  0]
+            ],
+            'q': [
+                [-20,-10,-10, -5, -5,-10,-10,-20],
+                [-10,  0,  0,  0,  0,  0,  0,-10],
+                [-10,  0,  5,  5,  5,  5,  0,-10],
+                [ -5,  0,  5,  5,  5,  5,  0, -5],
+                [  0,  0,  5,  5,  5,  5,  0, -5],
+                [-10,  5,  5,  5,  5,  5,  0,-10],
+                [-10,  0,  5,  0,  0,  0,  0,-10],
+                [-20,-10,-10, -5, -5,-10,-10,-20]
+            ],
+            'k': [ // Early/Mid game king table
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-30,-40,-40,-50,-50,-40,-40,-30],
+                [-20,-30,-30,-40,-40,-30,-30,-20],
+                [-10,-20,-20,-20,-20,-20,-20,-10],
+                [ 20, 20,  0,  0,  0,  0, 20, 20],
+                [ 20, 30, 10,  0,  0, 10, 30, 20]
+            ]
+        };
+
+        function evaluateBoard(testGame) {
+            let totalEvaluation = 0;
+            const board = testGame.board();
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const piece = board[r][c];
+                    if (piece) {
+                        // Base piece value
+                        let val = PIECE_VALUES[piece.type];
+                        // Positional value (flip table for Black)
+                        let pstRow = piece.color === 'w' ? r : 7 - r;
+                        val += PST[piece.type][pstRow][c];
+                        
+                        totalEvaluation += piece.color === 'w' ? val : -val;
+                    }
+                }
+            }
+            return totalEvaluation;
+        }
+
+        function minimax(testGame, depth, alpha, beta, isMaximizingPlayer) {
+            if (depth === 0 || testGame.game_over()) {
+                return evaluateBoard(testGame);
+            }
+
+            const moves = testGame.moves();
+            
+            // Simple move ordering: captures first to improve Alpha-Beta pruning
+            moves.sort((a, b) => (b.includes('x') ? 1 : 0) - (a.includes('x') ? 1 : 0));
+
+            if (isMaximizingPlayer) {
+                let bestVal = -Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    testGame.move(moves[i]);
+                    bestVal = Math.max(bestVal, minimax(testGame, depth - 1, alpha, beta, !isMaximizingPlayer));
+                    testGame.undo();
+                    alpha = Math.max(alpha, bestVal);
+                    if (beta <= alpha) break; // Prune
+                }
+                return bestVal;
+            } else {
+                let bestVal = Infinity;
+                for (let i = 0; i < moves.length; i++) {
+                    testGame.move(moves[i]);
+                    bestVal = Math.min(bestVal, minimax(testGame, depth - 1, alpha, beta, !isMaximizingPlayer));
+                    testGame.undo();
+                    beta = Math.min(beta, bestVal);
+                    if (beta <= alpha) break; // Prune
+                }
+                return bestVal;
+            }
+        }
+
+        function makeAIMove() {
+            if (game.game_over()) return;
+
+            const moves = game.moves({ verbose: true });
+            if (moves.length === 0) return;
+
+            const depth = parseInt(aiDepthSelect.value);
+            const isWhite = game.turn() === 'w';
+            let bestMove = null;
+            let bestValue = isWhite ? -Infinity : Infinity;
+
+            // Sort moves to optimize pruning
+            moves.sort((a, b) => (b.flags.includes('c') ? 1 : 0) - (a.flags.includes('c') ? 1 : 0));
+
+            // Alpha-Beta Search
+            for (let i = 0; i < moves.length; i++) {
+                const move = moves[i];
+                game.move(move);
+                
+                // Call minimax for opponent's perspective
+                const boardValue = minimax(game, depth - 1, -Infinity, Infinity, !isWhite);
+                
+                game.undo();
+
+                if (isWhite) {
+                    if (boardValue > bestValue) {
+                        bestValue = boardValue;
+                        bestMove = move;
+                    }
+                } else {
+                    if (boardValue < bestValue) {
+                        bestValue = boardValue;
+                        bestMove = move;
+                    }
+                }
+            }
+
+            // Fallback if something fails
+            if (!bestMove) bestMove = moves[Math.floor(Math.random() * moves.length)];
+
+            // Execute the AI's chosen move
+            executeMove(bestMove.from, bestMove.to, 'q');
+            isAITurn = false;
+        }
+
+        // Boot
+        initBoard();
+        
+    </script>
+</body>
+  </html>
