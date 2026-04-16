@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Windows 12 Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { accent: '#0067c0' } } }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap');
+
+        :root {
+            --glass-light: rgba(255, 255, 255, 0.6);
+            --glass-dark: rgba(20, 20, 20, 0.65);
+            --border-light: rgba(255, 255, 255, 0.4);
+            --border-dark: rgba(255, 255, 255, 0.1);
+        }
+
+        body, html {
+            margin: 0; padding: 0; height: 100%; overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            user-select: none; -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Boot Screen */
+        #boot-screen {
+            position: fixed; inset: 0; background: #000; z-index: 99999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease-out, visibility 0.8s; color: white;
+        }
+        .spinner-boot {
+            width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: #0078d4; border-radius: 50%;
+            animation: spin 1s linear infinite; margin-top: 40px;
+        }
+
+        /* Wallpaper */
+        #wallpaper {
+            position: fixed; inset: 0; z-index: -1;
+            background-size: cover; background-position: center;
+            transition: background-image 0.8s ease, filter 0.5s;
+        }
+        
+        .dark #wallpaper { filter: brightness(0.85); }
+
+        /* Mica Material */
+        .mica {
+            background: var(--glass-light);
+            backdrop-filter: blur(30px) saturate(150%);
+            border: 1px solid var(--border-light);
+        }
+        .dark .mica {
+            background: var(--glass-dark);
+            border: 1px solid var(--border-dark);
+            color: #f3f3f3;
+        }
+
+        /* Windows */
+        .window {
+            position: absolute; display: none; flex-direction: column;
+            border-radius: 12px; overflow: hidden;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+            z-index: 10;
+            transform-origin: center;
+        }
+
+        @media (max-width: 768px) {
+            .window { width: 100% !important; height: calc(100% - 60px) !important; top: 0 !important; left: 0 !important; border-radius: 0; }
+        }
+
+        .window-header {
+            height: 40px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 12px; cursor: default; touch-action: none;
+            background: rgba(255,255,255,0.1); border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .dark .window-header { background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        .win-controls button {
+            width: 30px; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .win-controls button:hover { background: rgba(150,150,150,0.2); }
+        .win-controls .close-btn:hover { background: #e81123; color: white; }
+
+        .window-content { flex: 1; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
+        .dark .window-content { background: #1a1a1a; }
+
+        /* Taskbar */
+        .taskbar {
+            position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%);
+            height: 54px; padding: 0 8px; border-radius: 16px;
+            display: flex; align-items: center; gap: 4px; z-index: 10000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        @media (max-width: 640px) {
+            .taskbar { bottom: 0; width: 100%; border-radius: 0; justify-content: space-between; padding: 0 16px; }
+            .tb-divider, .tb-tray { display: none !important; }
+        }
+
+        .tb-icon {
+            width: 40px; height: 40px; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; position: relative;
+        }
+        .tb-icon:hover { background: rgba(150,150,150,0.2); transform: scale(1.05); }
+        .tb-icon:active { transform: scale(0.95); }
+        .tb-icon.open::after {
+            content: ''; position: absolute; bottom: 2px; width: 6px; height: 3px;
+            background: #888; border-radius: 2px;
+        }
+        .tb-icon.active::after { background: var(--accent); width: 12px; }
+
+        /* Start Menu */
+        .start-menu {
+            position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(20px);
+            width: 90vw; max-width: 500px; height: 600px; max-height: 80vh;
+            border-radius: 16px; padding: 24px; z-index: 9999;
+            opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+        .start-menu.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+        /* Copilot Sidebar */
+        .copilot-sidebar {
+            position: fixed; top: 10px; right: -420px; width: 400px; height: calc(100% - 74px);
+            border-radius: 16px; z-index: 9998; display: flex; flex-direction: column;
+            transition: right 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+        }
+        .copilot-sidebar.show { right: 10px; }
+
+        .chat-bubble { padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; font-size: 14px; max-width: 85%; line-height: 1.5; word-wrap: break-word;}
+        .msg-user { background: #0078d4; color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .msg-ai { background: rgba(150,150,150,0.1); align-self: flex-start; border-bottom-left-radius: 4px; }
+        .dark .msg-ai { background: rgba(255,255,255,0.05); }
+
+        /* Terminal */
+        .term-container { background: #0c0c0c; color: #f0f0f0; font-family: 'Consolas', monospace; padding: 10px; overflow-y: auto; height: 100%; font-size: 14px;}
+        .term-input { background: transparent; border: none; outline: none; color: #fff; flex: 1; font-family: inherit;}
+
+        /* Animations */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .anim-pop-in { animation: popIn 0.3s cubic-bezier(0.1, 0.9, 0.2, 1) forwards; }
+        .anim-pop-out { animation: popOut 0.2s ease-in forwards; }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes popOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.95); } }
+        
+        .thinking-dots span { animation: blink 1.4s infinite both; width: 4px; height: 4px; background: currentColor; border-radius: 50%; display: inline-block; margin: 0 1px; }
+        .thinking-dots span:nth-child(2) { animation-delay: 0.2s; } .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%, 100% { opacity: 0.2; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+
+        /* Context Menu */
+        #context-menu { position: fixed; z-index: 100000; width: 220px; padding: 6px; border-radius: 10px; display: none; }
+        .ctx-item { padding: 8px 12px; border-radius: 6px; font-size: 13px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .ctx-item:hover { background: rgba(150,150,150,0.2); }
+    </style>
+</head>
+<body>
+
+    <!-- Boot Screen -->
+    <div id="boot-screen">
+        <i class="fab fa-windows text-7xl text-blue-500 mb-4"></i>
+        <div class="spinner-boot"></div>
+    </div>
+
+    <!-- Wallpaper -->
+    <div id="wallpaper" style="background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=2564');"></div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-[100000] flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="desktop" class="w-full h-full relative p-2" oncontextmenu="showContext(event)">
+        
+        <!-- Desktop Icons -->
+        <div class="flex flex-col gap-2 w-24 p-2">
+            <div class="flex flex-col items-center gap-1 p-2 rounded hover:bg-white/10 cursor-pointer" onclick="appManager.open('explorer')">
+                <i class="fas fa-folder text-4xl text-yellow-400 drop-shadow-md"></i>
+                <span class="text-xs text-white drop-shadow-md text-center">Files</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 p-2 rounded hover:bg-white/10 cursor-pointer" onclick="appManager.open('terminal')">
+                <i class="fas fa-terminal text-4xl text-gray-800 dark:text-gray-200 drop-shadow-md"></i>
+                <span class="text-xs text-white drop-shadow-md text-center">Terminal</span>
+            </div>
+        </div>
+
+        <!-- APP: EXPLORER -->
+        <div class="window mica" id="win-explorer" style="width: 700px; height: 450px; top: 80px; left: 100px;">
+            <div class="window-header" onpointerdown="dragSys.start(event, 'win-explorer')">
+                <div class="flex items-center gap-2 text-xs font-semibold"><i class="fas fa-folder text-yellow-500"></i> File Explorer</div>
+                <div class="win-controls flex gap-1">
+                    <button onclick="appManager.close('explorer')"><i class="fas fa-minus text-xs"></i></button>
+                    <button onclick="appManager.maximize('win-explorer')"><i class="far fa-square text-xs"></i></button>
+                    <button class="close-btn" onclick="appManager.close('explorer')"><i class="fas fa-times text-xs"></i></button>
+                </div>
+            </div>
+            <div class="window-content flex">
+                <div class="w-48 border-r border-gray-200 dark:border-gray-800 p-4 space-y-1 text-sm overflow-y-auto hidden sm:block">
+                    <div class="p-2 rounded hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer font-semibold"><i class="fas fa-home text-blue-500 w-6"></i> Home</div>
+                    <div class="p-2 rounded hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer"><i class="fas fa-desktop text-gray-500 w-6"></i> Desktop</div>
+                </div>
+                <div class="flex-1 p-6 grid grid-cols-3 sm:grid-cols-4 gap-4 content-start">
+                    <div class="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer group" onclick="appManager.open('notepad')">
+                        <i class="fas fa-file-alt text-5xl text-blue-500 group-hover:scale-105 transition"></i>
+                        <span class="text-xs">Notes.txt</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP: NOTEPAD -->
+        <div class="window mica" id="win-notepad" style="width: 500px; height: 400px; top: 120px; left: 200px;">
+            <div class="window-header" onpointerdown="dragSys.start(event, 'win-notepad')">
+                <div class="flex items-center gap-2 text-xs font-semibold"><i class="fas fa-file-alt text-blue-500"></i> Notepad</div>
+                <div class="win-controls flex gap-1">
+                    <button class="close-btn" onclick="appManager.close('notepad')"><i class="fas fa-times text-xs"></i></button>
+                </div>
+            </div>
+            <div class="window-content">
+                <div class="flex gap-4 p-2 border-b border-gray-200 dark:border-gray-800 text-xs">
+                    <span class="cursor-pointer hover:text-blue-500" onclick="saveNote()">File (Save)</span>
+                </div>
+                <textarea id="note-area" class="flex-1 w-full p-4 resize-none bg-transparent outline-none font-mono text-sm" placeholder="Start typing..."></textarea>
+            </div>
+        </div>
+
+        <!-- APP: TERMINAL -->
+        <div class="window mica" id="win-terminal" style="width: 600px; height: 350px; top: 150px; left: 250px;">
+            <div class="window-header" onpointerdown="dragSys.start(event, 'win-terminal')">
+                <div class="flex items-center gap-2 text-xs font-semibold"><i class="fas fa-terminal"></i> Command Prompt</div>
+                <div class="win-controls flex gap-1">
+                    <button class="close-btn" onclick="appManager.close('terminal')"><i class="fas fa-times text-xs"></i></button>
+                </div>
+            </div>
+            <div class="window-content term-container" id="term-out" onclick="document.getElementById('term-in').focus()">
+                <div>Microsoft Windows [Version 12.0.2600]</div>
+                <div id="term-history"></div>
+                <div class="flex">
+                    <span class="mr-2 text-green-400">C:\Users\Admin&gt;</span>
+                    <input type="text" id="term-in" class="term-input" autocomplete="off" spellcheck="false">
+                </div>
+            </div>
+        </div>
+
+        <!-- APP: SETTINGS -->
+        <div class="window mica" id="win-settings" style="width: 650px; height: 450px; top: 100px; left: 300px;">
+            <div class="window-header" onpointerdown="dragSys.start(event, 'win-settings')">
+                <div class="flex items-center gap-2 text-xs font-semibold"><i class="fas fa-cog text-gray-500"></i> Settings</div>
+                <div class="win-controls flex gap-1">
+                    <button class="close-btn" onclick="appManager.close('settings')"><i class="fas fa-times text-xs"></i></button>
+                </div>
+            </div>
+            <div class="window-content flex">
+                <div class="w-48 border-r border-gray-200 dark:border-gray-800 p-4 space-y-1 text-sm hidden sm:block">
+                    <div class="p-2 rounded bg-black/10 dark:bg-white/10 font-semibold"><i class="fas fa-paint-brush w-6"></i> Personalization</div>
+                </div>
+                <div class="flex-1 p-6 overflow-y-auto">
+                    <h2 class="text-xl font-semibold mb-6">Personalization</h2>
+                    <div class="mb-6">
+                        <h3 class="text-sm font-semibold mb-3 text-gray-500 uppercase tracking-wider">System Theme</h3>
+                        <div class="flex gap-4">
+                            <button onclick="setTheme('light')" class="flex-1 py-3 border border-gray-300 dark:border-gray-700 rounded-lg hover:border-blue-500 transition">Light Mode</button>
+                            <button onclick="setTheme('dark')" class="flex-1 py-3 border border-gray-300 dark:border-gray-700 rounded-lg hover:border-blue-500 transition bg-gray-800 text-white">Dark Mode</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP: CALCULATOR -->
+        <div class="window mica" id="win-calc" style="width: 320px; height: 480px; top: 150px; left: 400px;">
+            <div class="window-header" onpointerdown="dragSys.start(event, 'win-calc')">
+                <div class="flex items-center gap-2 text-xs font-semibold"><i class="fas fa-calculator text-blue-500"></i> Calculator</div>
+                <div class="win-controls flex gap-1">
+                    <button class="close-btn" onclick="appManager.close('calc')"><i class="fas fa-times text-xs"></i></button>
+                </div>
+            </div>
+            <div class="window-content flex flex-col p-1">
+                <div id="calc-display" class="h-24 flex items-end justify-end p-4 text-4xl font-light">0</div>
+                <div class="grid grid-cols-4 gap-1 flex-1 p-1">
+                    <button onclick="calcInput('C')" class="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded">C</button>
+                    <button onclick="calcInput('/')" class="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded">÷</button>
+                    <button onclick="calcInput('*')" class="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded">×</button>
+                    <button onclick="calcInput('DEL')" class="bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded"><i class="fas fa-backspace"></i></button>
+                    <button onclick="calcInput('7')" class="bg-black/5 dark:bg-white/5 rounded">7</button>
+                    <button onclick="calcInput('8')" class="bg-black/5 dark:bg-white/5 rounded">8</button>
+                    <button onclick="calcInput('9')" class="bg-black/5 dark:bg-white/5 rounded">9</button>
+                    <button onclick="calcInput('-')" class="bg-black/5 dark:bg-white/5 rounded">−</button>
+                    <button onclick="calcInput('=')" class="bg-blue-600 text-white rounded col-span-4 hover:bg-blue-700">=</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Start Menu -->
+    <div id="start-menu" class="start-menu mica flex flex-col">
+        <div class="relative mb-6">
+            <i class="fas fa-search absolute left-4 top-3 text-gray-400"></i>
+            <input type="text" placeholder="Search apps, settings, and documents" class="w-full bg-white/10 border border-black/10 dark:border-white/10 rounded-full py-2 pl-12 pr-4 outline-none">
+        </div>
+        <div class="grid grid-cols-4 gap-2 mb-4">
+            <div class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer" onclick="appManager.open('explorer'); ui.toggleStart(false)">
+                <i class="fas fa-folder text-3xl text-yellow-500"></i><span class="text-[10px]">Explorer</span>
+            </div>
+            <div class="flex flex-col items-center gap-1 p-2 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 cursor-pointer" onclick="appManager.open('notepad'); ui.toggleStart(false)">
+                <i class="fas fa-file-alt text-3xl text-blue-500"></i><span class="text-[10px]">Notepad</span>
+            </div>
+        </div>
+        <div class="mt-auto flex justify-between items-center pt-4 border-t border-black/10 dark:border-white/10">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">A</div>
+                <span class="text-sm font-semibold">Admin User</span>
+            </div>
+            <i class="fas fa-power-off text-red-500 cursor-pointer"></i>
+        </div>
+    </div>
+
+    <!-- Copilot Sidebar -->
+    <div id="copilot-sidebar" class="copilot-sidebar mica">
+        <div class="p-4 border-b border-black/10 dark:border-white/10 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <!-- Inline Copilot SVG -->
+                <svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4Z" fill="url(#paint0_linear)"/>
+                    <path d="M34 18C34 18 31 15 24 15C17 15 14 18 14 18C14 18 11 21 11 26C11 31 14 34 14 34C14 34 17 37 24 37C31 37 34 34 34 34C34 34 37 31 37 26C37 21 34 18 34 18Z" fill="white"/>
+                    <path d="M24 21C21.2386 21 19 23.2386 19 26C19 28.7614 21.2386 31 24 31C26.7614 31 29 28.7614 29 26C29 23.2386 26.7614 21 24 21Z" fill="#0078D4"/>
+                    <defs>
+                        <linearGradient id="paint0_linear" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#3AC9FF"/><stop offset="1" stop-color="#0078D4"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="font-semibold text-sm">Copilot</span>
+            </div>
+            <button onclick="ui.toggleCopilot()" class="hover:bg-black/10 dark:hover:bg-white/10 w-8 h-8 rounded-full"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="ai-chat" class="flex-1 overflow-y-auto p-4 flex flex-col">
+            <div class="chat-bubble msg-ai">Hi! I'm Copilot. How can I assist you with Windows 12 today?</div>
+        </div>
+        <div class="p-4">
+            <div class="relative">
+                <input type="text" id="ai-input" placeholder="Ask anything..." class="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl py-3 px-4 pr-10 text-sm outline-none" onkeydown="if(event.key==='Enter') askAI()">
+                <button onclick="askAI()" class="absolute right-2 top-2 w-8 h-8 text-blue-500"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div id="context-menu" class="mica">
+        <div class="ctx-item" onclick="appManager.open('settings')"><i class="fas fa-desktop text-gray-400 w-4"></i> Display settings</div>
+        <div class="ctx-item" onclick="appManager.open('settings')"><i class="fas fa-paint-brush text-gray-400 w-4"></i> Personalize</div>
+        <div class="h-px bg-white/10 my-1"></div>
+        <div class="ctx-item" onclick="location.reload()"><i class="fas fa-sync-alt text-gray-400 w-4"></i> Refresh</div>
+    </div>
+
+    <!-- Taskbar -->
+    <div class="taskbar mica">
+        <div class="tb-icon" onclick="ui.toggleStart()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#0078D4" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 11.411V0h11.411v11.411H0zM12.589 0H24v11.411H12.589V0zM0 24V12.589h11.411V24H0zM12.589 24V12.589H24V24H12.589z"/>
+            </svg>
+        </div>
+        <div class="w-px h-6 bg-black/20 dark:bg-white/20 mx-1 tb-divider"></div>
+        <div class="tb-icon" id="tb-explorer" onclick="appManager.toggle('explorer')"><i class="fas fa-folder text-yellow-500 text-xl"></i></div>
+        <div class="tb-icon" id="tb-notepad" onclick="appManager.toggle('notepad')"><i class="fas fa-file-alt text-blue-500 text-xl"></i></div>
+        <div class="tb-icon" id="tb-terminal" onclick="appManager.toggle('terminal')"><i class="fas fa-terminal text-gray-800 dark:text-gray-200 text-xl"></i></div>
+        <div class="tb-icon" id="tb-calc" onclick="appManager.toggle('calc')"><i class="fas fa-calculator text-blue-400 text-xl"></i></div>
+        <div class="tb-icon" id="tb-settings" onclick="appManager.toggle('settings')"><i class="fas fa-cog text-gray-500 text-xl"></i></div>
+        <div class="tb-icon" onclick="ui.toggleCopilot()">
+             <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4Z" fill="url(#paint_tb_linear)"/>
+                <path d="M34 18C34 18 31 15 24 15C17 15 14 18 14 18C14 18 11 21 11 26C11 31 14 34 14 34C14 34 17 37 24 37C31 37 34 34 34 34C34 34 37 31 37 26C37 21 34 18 34 18Z" fill="white"/>
+                <defs>
+                    <linearGradient id="paint_tb_linear" x1="4" y1="4" x2="44" y2="44" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="#3AC9FF"/><stop offset="1" stop-color="#0078D4"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+        
+        <div class="ml-auto flex items-center gap-3 px-2 tb-tray">
+            <div class="text-right text-xs leading-tight cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 p-1 rounded">
+                <div id="sys-time" class="font-semibold">12:00 PM</div>
+                <div id="sys-date" class="text-[10px] opacity-80">4/17/2026</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = ""; 
+        let zIndex = 100;
+
+        window.onload = () => {
+            setTimeout(() => {
+                const boot = document.getElementById('boot-screen');
+                boot.style.opacity = '0';
+                setTimeout(() => boot.style.display = 'none', 800);
+            }, 1500);
+        };
+
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('sys-time').innerText = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('sys-date').innerText = now.toLocaleDateString();
+        }
+        setInterval(updateClock, 1000); updateClock();
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-gray-800 dark:bg-gray-100 text-white dark:text-black px-6 py-3 rounded-full shadow-lg text-sm transition-all duration-300 transform translate-y-4 opacity-0';
+            toast.innerText = msg;
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.remove('translate-y-4', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('translate-y-4', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        const ui = {
+            startOpen: false, copilotOpen: false,
+            toggleStart: function(force) {
+                this.startOpen = force !== undefined ? force : !this.startOpen;
+                const sm = document.getElementById('start-menu');
+                this.startOpen ? sm.classList.add('show') : sm.classList.remove('show');
+                if(this.startOpen) this.toggleCopilot(false);
+            },
+            toggleCopilot: function(force) {
+                this.copilotOpen = force !== undefined ? force : !this.copilotOpen;
+                const cp = document.getElementById('copilot-sidebar');
+                this.copilotOpen ? cp.classList.add('show') : cp.classList.remove('show');
+                if(this.copilotOpen) this.toggleStart(false);
+            }
+        };
+
+        window.addEventListener('click', (e) => {
+            if(e.target.id === 'desktop') { ui.toggleStart(false); ui.toggleCopilot(false); }
+            document.getElementById('context-menu').style.display = 'none';
+        });
+
+        const appManager = {
+            apps: { explorer: false, notepad: false, terminal: false, settings: false, calc: false },
+            open: function(app) {
+                const win = document.getElementById('win-' + app);
+                const tb = document.getElementById('tb-' + app);
+                if(!this.apps[app]) {
+                    win.style.display = 'flex';
+                    win.classList.remove('anim-pop-out'); win.classList.add('anim-pop-in');
+                    this.apps[app] = true;
+                    if(tb) tb.classList.add('open');
+                }
+                this.focus('win-' + app);
+            },
+            close: function(app) {
+                const win = document.getElementById('win-' + app);
+                const tb = document.getElementById('tb-' + app);
+                win.classList.add('anim-pop-out');
+                setTimeout(() => win.style.display = 'none', 200);
+                this.apps[app] = false;
+                if(tb) { tb.classList.remove('open', 'active'); }
+            },
+            toggle: function(app) { this.apps[app] ? this.focus('win-' + app) : this.open(app); },
+            focus: function(winId) {
+                zIndex++;
+                document.getElementById(winId).style.zIndex = zIndex;
+            },
+            maximize: function(winId) {
+                const win = document.getElementById(winId);
+                if(win.style.width === '100%') {
+                    win.style.width = '700px'; win.style.height = '450px'; win.style.borderRadius = '12px';
+                } else {
+                    win.style.width = '100%'; win.style.height = 'calc(100% - 60px)'; win.style.top = '0'; win.style.left = '0'; win.style.borderRadius = '0';
+                }
+            }
+        };
+
+        const dragSys = {
+            el: null, dx: 0, dy: 0,
+            start: function(e, id) {
+                if(e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+                this.el = document.getElementById(id);
+                appManager.focus(id);
+                const r = this.el.getBoundingClientRect();
+                this.dx = e.clientX - r.left; this.dy = e.clientY - r.top;
+                document.addEventListener('pointermove', this.move);
+                document.addEventListener('pointerup', this.end);
+            },
+            move: function(e) {
+                if(!dragSys.el) return;
+                dragSys.el.style.left = (e.clientX - dragSys.dx) + 'px';
+                dragSys.el.style.top = (e.clientY - dragSys.dy) + 'px';
+            },
+            end: function() { dragSys.el = null; }
+        };
+
+        function setTheme(mode) { mode === 'dark' ? document.documentElement.classList.add('dark') : document.documentElement.classList.remove('dark'); }
+        function showContext(e) {
+            e.preventDefault();
+            const m = document.getElementById('context-menu');
+            m.style.display = 'block'; m.style.left = e.clientX + 'px'; m.style.top = e.clientY + 'px';
+        }
+
+        async function askAI() {
+            const input = document.getElementById('ai-input');
+            const chat = document.getElementById('ai-chat');
+            const query = input.value.trim();
+            if(!query) return;
+            chat.innerHTML += `<div class="chat-bubble msg-user">${query}</div>`;
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+
+            const loadId = 'ai-load-' + Date.now();
+            chat.innerHTML += `<div id="${loadId}" class="chat-bubble msg-ai">Thinking...</div>`;
+            
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: query }] }] })
+                });
+                const data = await response.json();
+                document.getElementById(loadId).innerText = data.candidates?.[0]?.content?.parts?.[0]?.text || "Error.";
+            } catch(e) { document.getElementById(loadId).innerText = "Connection error."; }
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        function calcInput(k) {
+            const d = document.getElementById('calc-display');
+            let val = d.innerText;
+            if(k === 'C') val = '0';
+            else if(k === '=') { try{ val = eval(val).toString(); }catch(e){val='Error';} }
+            else { val === '0' ? val = k : val += k; }
+            d.innerText = val;
+        }
+    </script>
+</body>
+</html>
